@@ -109,15 +109,18 @@ body.serif .content { font-family: "Noto Serif KR", Georgia, "Times New Roman", 
 }
 .book:first-child .bk { margin-top: 0; }
 
-/* 장: 줄바꿈만, 제목 없음. 장 번호는 왼쪽 여백에 내어쓰기 */
+/* 장: 줄바꿈만, 제목 없음. 본문은 그대로, 장 번호만 왼쪽 여백에 내어쓰기 */
 p.ch { margin: 0 0 1.1em; position: relative; }
-body.chmarks .content { padding-left: 3em; }
 body.chmarks p.ch::before {
   content: attr(data-c);
-  position: absolute; right: 100%; margin-right: .4em; top: 0;
+  position: absolute; right: 100%; margin-right: .2em; top: 0;
   font-size: 1em; font-weight: 600; color: var(--muted);
   font-family: "Noto Sans KR", sans-serif;
+  line-height: calc(var(--fs, 19px) * 1.85);
 }
+/* 여백(22px) 안에 들어가도록 자릿수별 크기 보정 */
+body.chmarks p.ch.c2::before { font-size: .78em; }
+body.chmarks p.ch.c3::before { font-size: .6em; }
 
 /* 절: 이어쓰기 + 위첨자 번호 */
 span.v { }

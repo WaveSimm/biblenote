@@ -38,9 +38,10 @@ class Pane {
     sec.append(h);
     data.chapters.forEach((verses, ci) => {
       const p = document.createElement("p");
-      p.className = "ch";
+      const cn = ci + 1;
+      p.className = "ch" + (cn >= 100 ? " c3" : cn >= 10 ? " c2" : "");
       p.dataset.b = b;
-      p.dataset.c = ci + 1;
+      p.dataset.c = cn;
       verses.forEach((t, vi) => {
         const s = document.createElement("span");
         s.className = "v" + (t == null ? " miss" : "");
