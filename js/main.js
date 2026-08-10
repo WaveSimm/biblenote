@@ -162,7 +162,6 @@ class Pane {
     requestAnimationFrame(() => {
       this._raf = false;
       const suppressed = performance.now() < this.suppressUntil;
-      if (!suppressed) handleBars(this);
       this.maybeExtend();
       if (suppressed || this !== active) return;
       const ref = this.topRef();
@@ -198,7 +197,6 @@ async function jumpTo(ref, opts = {}) {
   addRecentBook(ref.b);
   if (opts.push !== false) pushHistory(curRef, opts.query);
   schedSavePos();
-  document.body.classList.remove("bars-hidden");
 }
 
 function pushHistory(ref, query) {
@@ -263,16 +261,6 @@ function updateLoc(ref) {
 function addRecentBook(b) {
   settings.recentBooks = [b, ...settings.recentBooks.filter(x => x !== b)].slice(0, 4);
   saveSettings(settings);
-}
-
-/* ================= 상/하단 바 ================= */
-function handleBars(pane) {
-  const st = pane.root.scrollTop;
-  const d = st - pane._lastST;
-  pane._lastST = st;
-  if (st < 60) { document.body.classList.remove("bars-hidden"); return; }
-  if (d > 10) document.body.classList.add("bars-hidden");
-  else if (d < -10) document.body.classList.remove("bars-hidden");
 }
 
 /* ================= 시트/팝오버 ================= */
@@ -503,12 +491,6 @@ async function main() {
   $("btnSettings").onclick = () => { renderFavList(); syncSegs(); openSheet($("sheetSettings")); };
   $("backdrop").onclick = closeAll;
   for (const btn of document.querySelectorAll("[data-close]")) btn.onclick = closeAll;
-
-  // 본문 탭 → 바 토글
-  $("panes").addEventListener("click", () => {
-    if (String(getSelection())) return;
-    document.body.classList.toggle("bars-hidden");
-  });
 
   // 마지막 위치 복원
   await jumpTo(curRef, { push: false });

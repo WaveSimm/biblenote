@@ -44,7 +44,6 @@ body {
   position: fixed; left: 0; right: 0; z-index: 20;
   display: flex; align-items: center; gap: 8px;
   background: var(--bar-bg); backdrop-filter: blur(8px);
-  transition: transform .25s ease;
 }
 #topbar {
   top: 0; padding: calc(env(safe-area-inset-top) + 8px) 12px 8px;
@@ -55,9 +54,6 @@ body {
   border-top: 1px solid var(--line);
   justify-content: space-around;
 }
-body.bars-hidden #topbar { transform: translateY(-110%); }
-body.bars-hidden #bottombar { transform: translateY(110%); }
-
 #loc { flex: 1; text-align: center; font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .chip {
