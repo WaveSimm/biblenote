@@ -1,5 +1,5 @@
 // BibleNote Service Worker — 앱 셸 + 성경 데이터 오프라인 캐시
-const VER = "biblenote-v5";
+const VER = "biblenote-v6";
 const SHELL = [
   "./", "index.html", "css/app.css",
   "js/main.js", "js/data.js", "js/parser.js", "js/store.js",

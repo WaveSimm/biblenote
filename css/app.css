@@ -17,6 +17,7 @@ html, body { margin: 0; height: 100%; overscroll-behavior: none; }
   --sheet-bg: #ffffff;
   --ot: #8a6d3b;
   --nt: #4a6a8a;
+  --vnum: #3a6db0;
 }
 [data-theme="dark"] {
   --bg: #17181c;
@@ -32,6 +33,7 @@ html, body { margin: 0; height: 100%; overscroll-behavior: none; }
   --sheet-bg: #1f2025;
   --ot: #b08d54;
   --nt: #7096ba;
+  --vnum: #7fa9dd;
 }
 
 body {
@@ -107,19 +109,19 @@ body.serif .content { font-family: "Noto Serif KR", Georgia, "Times New Roman", 
 }
 .book:first-child .bk { margin-top: 0; }
 
-/* 장: 줄바꿈만, 제목 없음. 여백에 옅은 장 번호 */
+/* 장: 줄바꿈만, 제목 없음. 장 첫머리에 본문 크기의 장 번호 */
 p.ch { margin: 0 0 1.1em; position: relative; }
 body.chmarks p.ch::before {
   content: attr(data-c);
-  position: absolute; left: -2.2em; top: .35em;
-  font-size: .62em; color: var(--faint); font-family: "Noto Sans KR", sans-serif;
-  width: 1.8em; text-align: right;
+  font-size: 1em; font-weight: 600; color: var(--muted);
+  margin-right: .4em;
+  font-family: "Noto Sans KR", sans-serif;
 }
 
 /* 절: 이어쓰기 + 위첨자 번호 */
 span.v { }
 span.v sup {
-  font-size: .58em; color: var(--accent); opacity: .75;
+  font-size: .58em; color: var(--vnum);
   margin-right: .15em; font-family: "Noto Sans KR", sans-serif;
   user-select: none;
 }
