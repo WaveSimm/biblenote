@@ -1,0 +1,44 @@
+[
+ {
+  "code": "krv",
+  "name": "개역개정",
+  "short": "개역",
+  "lang": "ko"
+ },
+ {
+  "code": "ckb",
+  "name": "공동번역",
+  "short": "공동",
+  "lang": "ko"
+ },
+ {
+  "code": "nkr",
+  "name": "표준새번역",
+  "short": "새번역",
+  "lang": "ko"
+ },
+ {
+  "code": "klb",
+  "name": "현대어성경",
+  "short": "현대어",
+  "lang": "ko"
+ },
+ {
+  "code": "niv",
+  "name": "NIV",
+  "short": "NIV",
+  "lang": "en"
+ },
+ {
+  "code": "nasb",
+  "name": "NASB",
+  "short": "NASB",
+  "lang": "en"
+ },
+ {
+  "code": "msg",
+  "name": "The Message",
+  "short": "MSG",
+  "lang": "en"
+ }
+]

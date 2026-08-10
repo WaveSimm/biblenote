@@ -1,0 +1,185 @@
+/* ===== BibleNote ===== */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overscroll-behavior: none; }
+
+:root {
+  --bg: #faf8f4;
+  --fg: #2b2a26;
+  --muted: #9b968c;
+  --faint: #c9c4b8;
+  --bar-bg: rgba(250, 248, 244, .92);
+  --line: #e6e2d8;
+  --accent: #7a6a4f;
+  --chip-bg: #efece4;
+  --chip-on: #2b2a26;
+  --chip-on-fg: #faf8f4;
+  --sheet-bg: #ffffff;
+  --ot: #8a6d3b;
+  --nt: #4a6a8a;
+}
+[data-theme="dark"] {
+  --bg: #17181c;
+  --fg: #d8d4ca;
+  --muted: #6f6d66;
+  --faint: #45443f;
+  --bar-bg: rgba(23, 24, 28, .92);
+  --line: #2b2c31;
+  --accent: #b0a184;
+  --chip-bg: #26272c;
+  --chip-on: #d8d4ca;
+  --chip-on-fg: #17181c;
+  --sheet-bg: #1f2025;
+  --ot: #b08d54;
+  --nt: #7096ba;
+}
+
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "Noto Sans KR", -apple-system, sans-serif;
+}
+
+/* ---- bars ---- */
+#topbar, #bottombar {
+  position: fixed; left: 0; right: 0; z-index: 20;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bar-bg); backdrop-filter: blur(8px);
+  transition: transform .25s ease;
+}
+#topbar {
+  top: 0; padding: calc(env(safe-area-inset-top) + 8px) 12px 8px;
+  border-bottom: 1px solid var(--line);
+}
+#bottombar {
+  bottom: 0; padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
+  border-top: 1px solid var(--line);
+  justify-content: space-around;
+}
+body.bars-hidden #topbar { transform: translateY(-110%); }
+body.bars-hidden #bottombar { transform: translateY(110%); }
+
+#loc { flex: 1; text-align: center; font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.chip {
+  border: 1px solid var(--line); background: var(--chip-bg); color: var(--fg);
+  border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+}
+.chip.on { background: var(--chip-on); color: var(--chip-on-fg); border-color: var(--chip-on); }
+
+.iconbtn {
+  border: none; background: none; color: var(--fg); font-size: 18px;
+  padding: 6px 10px; border-radius: 10px; cursor: pointer; line-height: 1;
+}
+.iconbtn:disabled { opacity: .25; }
+.iconbtn.on { background: var(--chip-on); color: var(--chip-on-fg); }
+
+/* ---- version popover ---- */
+.pop {
+  position: fixed; z-index: 60; display: flex; gap: 6px; flex-wrap: wrap;
+  background: var(--sheet-bg); border: 1px solid var(--line); border-radius: 14px;
+  padding: 10px; box-shadow: 0 8px 30px rgba(0,0,0,.18); max-width: 90vw;
+}
+
+/* ---- panes ---- */
+#panes { position: fixed; inset: 0; display: flex; flex-direction: column; }
+.pane { flex: 1 1 0; overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+body.compare .pane + .pane { border-top: 2px solid var(--line); }
+@media (min-width: 900px) and (orientation: landscape) {
+  body.compare #panes { flex-direction: row; }
+  body.compare .pane + .pane { border-top: none; border-left: 2px solid var(--line); }
+}
+.content {
+  position: relative;
+  max-width: 44em; margin: 0 auto;
+  padding: 84px 22px 96px;
+  font-size: var(--fs, 19px); line-height: 1.85;
+}
+body.serif .content { font-family: "Noto Serif KR", Georgia, "Times New Roman", serif; }
+
+/* 책 제목: 책 경계에만 표시되는 얇은 구분 */
+.bk {
+  font-size: .85em; font-weight: 600; letter-spacing: .35em; color: var(--muted);
+  text-align: center; margin: 2.2em 0 1.4em; text-transform: uppercase;
+}
+.book:first-child .bk { margin-top: 0; }
+
+/* 장: 줄바꿈만, 제목 없음. 여백에 옅은 장 번호 */
+p.ch { margin: 0 0 1.1em; position: relative; }
+body.chmarks p.ch::before {
+  content: attr(data-c);
+  position: absolute; left: -2.2em; top: .35em;
+  font-size: .62em; color: var(--faint); font-family: "Noto Sans KR", sans-serif;
+  width: 1.8em; text-align: right;
+}
+
+/* 절: 이어쓰기 + 위첨자 번호 */
+span.v { }
+span.v sup {
+  font-size: .58em; color: var(--accent); opacity: .75;
+  margin-right: .15em; font-family: "Noto Sans KR", sans-serif;
+  user-select: none;
+}
+body.novnum span.v sup { display: none; }
+span.v.miss sup { opacity: .3; }
+span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
+@keyframes flash { 0% { background: color-mix(in srgb, var(--accent) 28%, transparent); } 100% { background: transparent; } }
+
+/* ---- sheets ---- */
+#backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 40; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  background: var(--sheet-bg); border-radius: 18px 18px 0 0;
+  padding: 14px 16px calc(env(safe-area-inset-bottom) + 16px);
+  max-height: 78vh; overflow-y: auto;
+  box-shadow: 0 -6px 40px rgba(0,0,0,.25);
+}
+.sheet-head { display: flex; align-items: center; justify-content: space-between; font-weight: 600; margin-bottom: 10px; }
+.sheet-sub { font-size: 12px; color: var(--muted); margin: 14px 0 6px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; }
+.grid button {
+  border: 1px solid var(--line); background: none; color: var(--fg);
+  border-radius: 10px; padding: 9px 2px; font-size: 14px; cursor: pointer;
+}
+.grid button.ot { border-left: 3px solid var(--ot); }
+.grid button.nt { border-left: 3px solid var(--nt); }
+.grid button.cur { background: var(--chip-on); color: var(--chip-on-fg); }
+
+.recent-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; }
+.recent-row.wrap { flex-wrap: wrap; }
+.recent-row:empty { display: none; }
+.recent-row button {
+  border: 1px solid var(--line); background: var(--chip-bg); color: var(--fg);
+  border-radius: 999px; padding: 5px 11px; font-size: 13px; white-space: nowrap; cursor: pointer;
+}
+
+/* search */
+#searchForm { display: flex; flex-wrap: wrap; gap: 8px; }
+#searchInput {
+  flex: 1 1 100%; font-size: 17px; padding: 11px 14px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg);
+  outline: none;
+}
+#searchInput:focus { border-color: var(--accent); }
+#searchPreview { flex: 1; font-size: 13px; color: var(--accent); padding: 4px 2px; min-height: 1.2em; }
+#searchGo {
+  border: none; background: var(--chip-on); color: var(--chip-on-fg);
+  border-radius: 12px; padding: 8px 22px; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+#searchGo:disabled { opacity: .3; }
+
+/* settings */
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.set-row:last-child { border-bottom: none; }
+.set-row.col { flex-direction: column; align-items: stretch; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { border: none; background: none; color: var(--fg); padding: 7px 12px; font-size: 13px; cursor: pointer; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: none; }
+.seg button.on { background: var(--chip-on); color: var(--chip-on-fg); }
+#segFont button:nth-child(1) { font-size: 11px; } #segFont button:nth-child(2) { font-size: 13px; }
+#segFont button:nth-child(3) { font-size: 15px; } #segFont button:nth-child(4) { font-size: 17px; }
+#segFont button:nth-child(5) { font-size: 19px; }
+.fav-list { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; }
+
+/* misc */
+.loading { text-align: center; color: var(--muted); padding: 30px; font-size: 14px; }

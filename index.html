@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BibleNote</title>
+<meta name="theme-color" content="#1a1f2e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<!-- 상단 바 -->
+<header id="topbar">
+  <button class="chip" id="chipA"></button>
+  <button class="chip" id="chipB" hidden></button>
+  <div id="loc"></div>
+  <button class="iconbtn" id="btnCompare" title="비교 모드">⇆</button>
+</header>
+
+<!-- 번역본 선택 팝오버 -->
+<div id="verPop" class="pop" hidden></div>
+
+<!-- 본문 -->
+<main id="panes">
+  <div class="pane" id="paneA"><div class="content"></div></div>
+  <div class="pane" id="paneB" hidden><div class="content"></div></div>
+</main>
+
+<!-- 하단 바 -->
+<nav id="bottombar">
+  <button class="iconbtn" id="btnBack" title="뒤로">◀</button>
+  <button class="iconbtn" id="btnFwd" title="앞으로">▶</button>
+  <button class="iconbtn" id="btnSearch" title="권장절 검색">🔍</button>
+  <button class="iconbtn" id="btnBooks" title="책 선택">☰</button>
+  <button class="iconbtn" id="btnSettings" title="보기 설정">Aa</button>
+</nav>
+
+<!-- 시트 공통 배경 -->
+<div id="backdrop" hidden></div>
+
+<!-- 책·장 선택 시트 -->
+<div id="sheetBooks" class="sheet" hidden>
+  <div class="sheet-head">
+    <span id="sheetBooksTitle">책 선택</span>
+    <button class="iconbtn sheet-close" data-close>✕</button>
+  </div>
+  <div id="recentBooks" class="recent-row"></div>
+  <div id="bookGrid" class="grid"></div>
+  <div id="chapGrid" class="grid" hidden></div>
+</div>
+
+<!-- 검색 시트 -->
+<div id="sheetSearch" class="sheet" hidden>
+  <div class="sheet-head">
+    <span>권장절 검색</span>
+    <button class="iconbtn sheet-close" data-close>✕</button>
+  </div>
+  <form id="searchForm" autocomplete="off">
+    <input id="searchInput" type="text" placeholder="예: 요3:16, 창세기 1:1, 롬 8" inputmode="search">
+    <div id="searchPreview">&nbsp;</div>
+    <button type="submit" id="searchGo">이동</button>
+  </form>
+  <div class="sheet-sub">최근 이동</div>
+  <div id="historyList" class="recent-row wrap"></div>
+</div>
+
+<!-- 설정 시트 -->
+<div id="sheetSettings" class="sheet" hidden>
+  <div class="sheet-head">
+    <span>보기 설정</span>
+    <button class="iconbtn sheet-close" data-close>✕</button>
+  </div>
+  <div class="set-row">
+    <span>글자 크기</span>
+    <div class="seg" id="segFont">
+      <button data-fs="0">가</button><button data-fs="1">가</button><button data-fs="2">가</button><button data-fs="3">가</button><button data-fs="4">가</button>
+    </div>
+  </div>
+  <div class="set-row">
+    <span>테마</span>
+    <div class="seg" id="segTheme">
+      <button data-theme="auto">자동</button><button data-theme="light">밝게</button><button data-theme="dark">어둡게</button>
+    </div>
+  </div>
+  <div class="set-row">
+    <span>글꼴</span>
+    <div class="seg" id="segFace">
+      <button data-face="serif">명조</button><button data-face="sans">고딕</button>
+    </div>
+  </div>
+  <div class="set-row">
+    <span>절 번호</span>
+    <div class="seg" id="segVnum">
+      <button data-vnum="1">표시</button><button data-vnum="0">숨김</button>
+    </div>
+  </div>
+  <div class="set-row">
+    <span>장 표시</span>
+    <div class="seg" id="segChmark">
+      <button data-chmark="1">여백에 표시</button><button data-chmark="0">숨김</button>
+    </div>
+  </div>
+  <div class="set-row col">
+    <span>즐겨찾기 번역본 (최대 4개)</span>
+    <div id="favList" class="fav-list"></div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
