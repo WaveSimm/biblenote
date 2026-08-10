@@ -54,7 +54,14 @@ body {
   border-top: 1px solid var(--line);
   justify-content: space-around;
 }
-#loc { flex: 1; text-align: center; font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#navloc { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0; min-width: 0; }
+#loc {
+  background: none; border: none; cursor: pointer;
+  font-size: 14px; color: var(--muted); padding: 6px 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.iconbtn.nav { padding: 6px 5px; font-size: 14px; color: var(--muted); }
+.iconbtn.nav .dbl { letter-spacing: -0.32em; display: inline-block; margin-right: 0.32em; }
 
 .chip {
   border: 1px solid var(--line); background: var(--chip-bg); color: var(--fg);

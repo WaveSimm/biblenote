@@ -220,6 +220,40 @@ function goHistory(delta) {
   updateNavButtons();
 }
 
+/* ---- 장/절 단위 이동 (상단 삼각형) ---- */
+function stepVerse(dir) {
+  let { b, c, v } = curRef;
+  v += dir;
+  if (v < 1) {
+    c -= 1;
+    if (c < 1) {
+      if (b === 1) return;
+      b -= 1; c = bookMeta(b).chapters;
+    }
+    v = bookMeta(b).vpc[c - 1];
+  } else if (v > bookMeta(b).vpc[c - 1]) {
+    c += 1; v = 1;
+    if (c > bookMeta(b).chapters) {
+      if (b === 66) return;
+      b += 1; c = 1;
+    }
+  }
+  jumpTo({ b, c, v }, { push: false });
+}
+
+function stepChapter(dir) {
+  let { b, c } = curRef;
+  c += dir;
+  if (c < 1) {
+    if (b === 1) return;
+    b -= 1; c = bookMeta(b).chapters;
+  } else if (c > bookMeta(b).chapters) {
+    if (b === 66) return;
+    b += 1; c = 1;
+  }
+  jumpTo({ b, c, v: 1 }, { push: false });
+}
+
 function updateNavButtons() {
   $("btnBack").disabled = hist.idx <= 0;
   $("btnFwd").disabled = hist.idx >= hist.entries.length - 1;
@@ -274,9 +308,8 @@ function openVerPop(slot, anchor) {
   closeAll();
   const pop = $("verPop");
   pop.replaceChildren();
-  for (const code of settings.favorites) {
-    const vm = versionMeta(code);
-    if (!vm) continue;
+  for (const vm of VERSIONS) {
+    const code = vm.code;
     const btn = document.createElement("button");
     btn.className = "chip" + ((slot === "A" ? settings.verA : settings.verB) === code ? " on" : "");
     btn.textContent = vm.name;
@@ -416,29 +449,6 @@ function wireSettings() {
   function done() { saveSettings(settings); applySettings(); }
 }
 
-function renderFavList() {
-  const box = $("favList");
-  box.replaceChildren();
-  for (const vm of VERSIONS) {
-    const btn = document.createElement("button");
-    btn.className = "chip" + (settings.favorites.includes(vm.code) ? " on" : "");
-    btn.textContent = vm.name;
-    btn.onclick = () => {
-      const i = settings.favorites.indexOf(vm.code);
-      if (i >= 0) {
-        if (settings.favorites.length <= 1) return;
-        settings.favorites.splice(i, 1);
-      } else {
-        if (settings.favorites.length >= 4) return;
-        settings.favorites.push(vm.code);
-      }
-      saveSettings(settings);
-      renderFavList();
-    };
-    box.append(btn);
-  }
-}
-
 /* ---- 비교 모드 ---- */
 async function setCompare(on) {
   settings.mode = on ? "compare" : "single";
@@ -483,12 +493,16 @@ async function main() {
   $("btnBack").onclick = () => goHistory(-1);
   $("btnFwd").onclick = () => goHistory(1);
   $("btnBooks").onclick = () => { renderBookGrid(); openSheet($("sheetBooks")); };
-  $("btnSearch").onclick = () => {
+  $("loc").onclick = () => {
     renderHistoryList();
     openSheet($("sheetSearch"));
     setTimeout(() => $("searchInput").focus(), 80);
   };
-  $("btnSettings").onclick = () => { renderFavList(); syncSegs(); openSheet($("sheetSettings")); };
+  $("btnPrevCh").onclick = () => stepChapter(-1);
+  $("btnNextCh").onclick = () => stepChapter(1);
+  $("btnPrevV").onclick = () => stepVerse(-1);
+  $("btnNextV").onclick = () => stepVerse(1);
+  $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); };
   $("backdrop").onclick = closeAll;
   for (const btn of document.querySelectorAll("[data-close]")) btn.onclick = closeAll;
 

@@ -19,7 +19,13 @@
 <header id="topbar">
   <button class="chip" id="chipA"></button>
   <button class="chip" id="chipB" hidden></button>
-  <div id="loc"></div>
+  <div id="navloc">
+    <button class="iconbtn nav" id="btnPrevCh" title="이전 장"><span class="dbl">◂◂</span></button>
+    <button class="iconbtn nav" id="btnPrevV" title="이전 절">◂</button>
+    <button id="loc" title="권장절 검색"></button>
+    <button class="iconbtn nav" id="btnNextV" title="다음 절">▸</button>
+    <button class="iconbtn nav" id="btnNextCh" title="다음 장"><span class="dbl">▸▸</span></button>
+  </div>
   <button class="iconbtn" id="btnCompare" title="비교 모드">⇆</button>
 </header>
 
@@ -34,9 +40,8 @@
 
 <!-- 하단 바 -->
 <nav id="bottombar">
-  <button class="iconbtn" id="btnBack" title="뒤로">◀</button>
-  <button class="iconbtn" id="btnFwd" title="앞으로">▶</button>
-  <button class="iconbtn" id="btnSearch" title="권장절 검색">🔍</button>
+  <button class="iconbtn" id="btnBack" title="이동 기록 뒤로">↶</button>
+  <button class="iconbtn" id="btnFwd" title="이동 기록 앞으로">↷</button>
   <button class="iconbtn" id="btnBooks" title="책 선택">☰</button>
   <button class="iconbtn" id="btnSettings" title="보기 설정">Aa</button>
 </nav>
@@ -105,10 +110,6 @@
     <div class="seg" id="segChmark">
       <button data-chmark="1">여백에 표시</button><button data-chmark="0">숨김</button>
     </div>
-  </div>
-  <div class="set-row col">
-    <span>즐겨찾기 번역본 (최대 4개)</span>
-    <div id="favList" class="fav-list"></div>
   </div>
 </div>
 
