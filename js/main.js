@@ -283,6 +283,7 @@ function closeAll() {
 }
 
 function openVerPop(slot, anchor) {
+  closeAll();
   const pop = $("verPop");
   pop.replaceChildren();
   for (const code of settings.favorites) {
@@ -292,11 +293,13 @@ function openVerPop(slot, anchor) {
     btn.className = "chip" + ((slot === "A" ? settings.verA : settings.verB) === code ? " on" : "");
     btn.textContent = vm.name;
     btn.onclick = async () => {
-      if (slot === "A") { settings.verA = code; await paneA.setVersion(code); }
-      else { settings.verB = code; await paneB.setVersion(code); }
+      closeAll();
+      try {
+        if (slot === "A") { settings.verA = code; await paneA.setVersion(code); }
+        else { settings.verB = code; await paneB.setVersion(code); }
+      } catch (err) { console.error(err); }
       saveSettings(settings);
       updateChips();
-      closeAll();
     };
     pop.append(btn);
   }
