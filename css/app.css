@@ -81,7 +81,7 @@ body {
 #panes { position: fixed; inset: 0; display: flex; flex-direction: column; }
 .pane { flex: 1 1 0; overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
 body.compare .pane + .pane { border-top: 2px solid var(--line); }
-@media (min-width: 900px) and (orientation: landscape) {
+@media (orientation: landscape) {
   body.compare #panes { flex-direction: row; }
   body.compare .pane + .pane { border-top: none; border-left: 2px solid var(--line); }
 }

@@ -492,6 +492,16 @@ async function main() {
   $("backdrop").onclick = closeAll;
   for (const btn of document.querySelectorAll("[data-close]")) btn.onclick = closeAll;
 
+  // 화면 회전/크기 변경 시 현재 절 위치 유지
+  let resizeTimer;
+  addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      paneA.scrollToVerse(curRef.b, curRef.c, curRef.v);
+      if (settings.mode === "compare") paneB.scrollToVerse(curRef.b, curRef.c, curRef.v);
+    }, 250);
+  });
+
   // 마지막 위치 복원
   await jumpTo(curRef, { push: false });
   if (settings.mode === "compare") await setCompare(true);
