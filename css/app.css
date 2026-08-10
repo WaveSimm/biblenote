@@ -109,12 +109,13 @@ body.serif .content { font-family: "Noto Serif KR", Georgia, "Times New Roman", 
 }
 .book:first-child .bk { margin-top: 0; }
 
-/* 장: 줄바꿈만, 제목 없음. 장 첫머리에 본문 크기의 장 번호 */
+/* 장: 줄바꿈만, 제목 없음. 장 번호는 왼쪽 여백에 내어쓰기 */
 p.ch { margin: 0 0 1.1em; position: relative; }
+body.chmarks .content { padding-left: 3em; }
 body.chmarks p.ch::before {
   content: attr(data-c);
+  position: absolute; right: 100%; margin-right: .4em; top: 0;
   font-size: 1em; font-weight: 600; color: var(--muted);
-  margin-right: .4em;
   font-family: "Noto Sans KR", sans-serif;
 }
 
