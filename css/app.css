@@ -48,41 +48,41 @@ body {
   background: var(--bar-bg); backdrop-filter: blur(8px);
 }
 #topbar {
-  top: 0; padding: calc(env(safe-area-inset-top) + 4px) 6px 4px;
+  top: 0; padding: calc(env(safe-area-inset-top) + 4px) 4px 4px;
   border-bottom: 1px solid var(--line);
-  gap: 2px;
+  gap: 0;
 }
 #bottombar {
   bottom: 0; padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
   border-top: 1px solid var(--line);
   justify-content: space-around; gap: 6px;
 }
-#navloc { flex: 1; display: flex; align-items: center; justify-content: center; gap: 2px; min-width: 0; }
+#navloc { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0; min-width: 0; }
 /* 현재 위치: 상단 바의 유일한 글자 — 또렷하게 */
 #loc {
   background: none; border: none; cursor: pointer; border-radius: 10px;
   font-size: 17px; font-weight: 600; color: var(--fg);
-  padding: 10px 6px; margin: 0 2px;
+  padding: 10px 4px; margin: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
 /* 장·절 이동: 옆 버튼이 잘못 눌리지 않도록 넉넉한 터치 영역 */
 .iconbtn.nav {
   font-size: 20px; line-height: 1; color: var(--muted);
-  padding: 11px 7px; min-width: 40px; border-radius: 10px;
+  padding: 11px 4px; min-width: 36px; border-radius: 10px;
 }
 .iconbtn.nav .dbl { letter-spacing: -0.3em; display: inline-block; margin-right: 0.3em; }
-.iconbtn.hist { font-size: 19px; color: var(--fg); padding: 11px 6px; min-width: 36px; }
+.iconbtn.hist { font-size: 19px; color: var(--fg); padding: 11px 4px; min-width: 32px; }
 /* 이동 기록 버튼은 비활성일 때도 자리와 형태가 보이도록 */
 .iconbtn.hist:disabled { opacity: .32; }
 /* 장 이동 아이콘 바깥에 살짝 띄워 붙여 내비게이션 묶음으로 보이게 */
-#btnBack { margin-right: 10px; }
-#btnFwd { margin-left: 10px; }
+#btnBack { margin-right: 6px; }
+#btnFwd { margin-left: 6px; }
 @media (max-width: 380px) {
-  .iconbtn.nav { min-width: 36px; padding: 11px 5px; font-size: 18px; }
-  .iconbtn.hist { min-width: 32px; padding: 11px 4px; }
-  #btnBack { margin-right: 6px; }
-  #btnFwd { margin-left: 6px; }
-  #loc { font-size: 16px; padding: 10px 4px; }
+  .iconbtn.nav { min-width: 34px; padding: 11px 3px; font-size: 18px; }
+  .iconbtn.hist { min-width: 30px; padding: 11px 3px; }
+  #btnBack { margin-right: 4px; }
+  #btnFwd { margin-left: 4px; }
+  #loc { font-size: 15px; padding: 10px 2px; }
 }
 
 .chip {

@@ -331,7 +331,10 @@ function syncBarMetrics() {
 }
 
 function updateLoc(ref) {
-  $("loc").textContent = refLabel(ref);
+  // 책 이름이 길면 약칭으로 — 좁은 상단 바에서 장·절이 잘리지 않게
+  const m = bookMeta(ref.b);
+  const name = m.ko.length >= 5 ? m.abbr : m.ko;
+  $("loc").textContent = `${name} ${ref.c}:${ref.v}`;
 }
 
 function addRecentBook(b) {
