@@ -2,6 +2,7 @@ import { initData, getBook, BOOKS, VERSIONS, bookMeta, versionMeta, refLabel } f
 import { buildAliases, parseRef } from "./parser.js";
 import { loadSettings, saveSettings, loadHistory, saveHistory } from "./store.js";
 
+const APP_VERSION = "v12";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -502,17 +503,6 @@ function syncSegs() {
   mark("segChmark", "chmark", settings.chmarks ? 1 : 0);
 }
 
-// 지금 설치되어 있는 버전 — 서비스 워커가 만든 캐시 이름에서 읽는다
-async function showVersion() {
-  const el = $("appVer");
-  try {
-    const key = (await caches.keys()).find(k => k.startsWith("biblenote-"));
-    el.textContent = key ? key.slice("biblenote-".length) : "—";
-  } catch {
-    el.textContent = "—";
-  }
-}
-
 function wireSettings() {
   $("segFont").onclick = (e) => { if (e.target.dataset.fs) { settings.fontSize = +e.target.dataset.fs; done(); } };
   $("segLine").onclick = (e) => { if (e.target.dataset.lh) { settings.lineHeight = +e.target.dataset.lh; done(); } };
@@ -561,6 +551,7 @@ async function main() {
   active = paneA;
   updateChips();
   syncBarMetrics();
+  $("appVer").textContent = APP_VERSION;
 
   // 바 버튼
   $("chipA").onclick = (e) => openVerPop("A", e.currentTarget);
@@ -583,7 +574,7 @@ async function main() {
   $("btnNextCh").onclick = () => stepChapter(1);
   $("btnPrevV").onclick = () => stepVerse(-1);
   $("btnNextV").onclick = () => stepVerse(1);
-  $("btnSettings").onclick = () => { syncSegs(); showVersion(); openSheet($("sheetSettings")); };
+  $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); };
   $("backdrop").onclick = closeAll;
   for (const btn of document.querySelectorAll("[data-close]")) btn.onclick = closeAll;
 
@@ -603,9 +594,18 @@ async function main() {
   if (settings.mode === "compare") await setCompare(true);
   updateNavButtons();
 
-  // PWA
+  // PWA — 새 버전이 활성화되면 그 자리에서 한 번 새로 고쳐 반영한다
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController || reloading) return;   // 최초 설치 때는 새로고침하지 않는다
+      reloading = true;
+      location.reload();
+    });
+    navigator.serviceWorker.register("sw.js")
+      .then((reg) => reg.update())               // 실행할 때마다 새 버전 확인
+      .catch(() => {});
   }
 }
 
