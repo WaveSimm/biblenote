@@ -1,8 +1,9 @@
 import { initData, getBook, BOOKS, VERSIONS, bookMeta, versionMeta, refLabel } from "./data.js";
 import { buildAliases, parseRef } from "./parser.js";
 import { loadSettings, saveSettings, loadHistory, saveHistory } from "./store.js";
+import { renderOffline } from "./offline.js";
 
-const APP_VERSION = "v15";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
+const APP_VERSION = "v16";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -574,7 +575,7 @@ async function main() {
   $("btnNextCh").onclick = () => stepChapter(1);
   $("btnPrevV").onclick = () => stepVerse(-1);
   $("btnNextV").onclick = () => stepVerse(1);
-  $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); };
+  $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); renderOffline(); };
   $("backdrop").onclick = closeAll;
   for (const btn of document.querySelectorAll("[data-close]")) btn.onclick = closeAll;
 

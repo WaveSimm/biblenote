@@ -220,5 +220,24 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 #segFont button:nth-child(5) { font-size: 19px; }
 .fav-list { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; }
 
+/* 오프라인 저장 */
+.dl-head { display: flex; align-items: baseline; justify-content: space-between; }
+#dlTotal { font-size: 12px; color: var(--muted); font-weight: 400; }
+#dlList { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.dl-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.dl-name { flex: 1; min-width: 0; }
+.dl-stat { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dl-btn {
+  border: 1px solid var(--line); background: none; color: var(--fg);
+  border-radius: 8px; padding: 5px 12px; font-size: 12px; cursor: pointer; min-width: 62px;
+}
+.dl-btn.del { color: var(--muted); }
+#dlAll {
+  margin-top: 12px; width: 100%; border: 1px solid var(--line);
+  background: var(--chip-bg); color: var(--fg);
+  border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+#dlAll:disabled { opacity: .4; }
+
 /* misc */
 .loading { text-align: center; color: var(--muted); padding: 30px; font-size: 14px; }
