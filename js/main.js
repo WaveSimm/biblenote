@@ -2,7 +2,7 @@ import { initData, getBook, BOOKS, VERSIONS, bookMeta, versionMeta, refLabel } f
 import { buildAliases, parseRef } from "./parser.js";
 import { loadSettings, saveSettings, loadHistory, saveHistory } from "./store.js";
 
-const APP_VERSION = "v13";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
+const APP_VERSION = "v14";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 

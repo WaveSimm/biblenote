@@ -98,6 +98,9 @@ body {
 }
 .iconbtn:disabled { opacity: .25; }
 .iconbtn.on { background: var(--chip-on); color: var(--chip-on-fg); }
+/* 절 줄바꿈 전환: 무슨 기능인지 바로 읽히도록 글자 + 큰 엔터 기호 */
+#btnVBreak { display: inline-flex; align-items: center; gap: 1px; font-size: 14px; font-weight: 600; padding: 6px 8px; }
+#btnVBreak .ret { font-size: 22px; font-weight: 700; line-height: 1; }
 
 /* ---- version popover ---- */
 .pop {
