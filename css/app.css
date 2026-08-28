@@ -169,6 +169,8 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; font-weight: 600; margin-bottom: 10px; }
 .sheet-sub { font-size: 12px; color: var(--muted); margin: 14px 0 6px; }
+/* 설치된 앱 버전 — 배포 반영 여부 확인용 */
+.ver { margin-left: auto; margin-right: 10px; font-size: 12px; font-weight: 400; color: var(--muted); }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; }
 .grid button {

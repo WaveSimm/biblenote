@@ -502,6 +502,17 @@ function syncSegs() {
   mark("segChmark", "chmark", settings.chmarks ? 1 : 0);
 }
 
+// 지금 설치되어 있는 버전 — 서비스 워커가 만든 캐시 이름에서 읽는다
+async function showVersion() {
+  const el = $("appVer");
+  try {
+    const key = (await caches.keys()).find(k => k.startsWith("biblenote-"));
+    el.textContent = key ? key.slice("biblenote-".length) : "—";
+  } catch {
+    el.textContent = "—";
+  }
+}
+
 function wireSettings() {
   $("segFont").onclick = (e) => { if (e.target.dataset.fs) { settings.fontSize = +e.target.dataset.fs; done(); } };
   $("segLine").onclick = (e) => { if (e.target.dataset.lh) { settings.lineHeight = +e.target.dataset.lh; done(); } };
@@ -572,7 +583,7 @@ async function main() {
   $("btnNextCh").onclick = () => stepChapter(1);
   $("btnPrevV").onclick = () => stepVerse(-1);
   $("btnNextV").onclick = () => stepVerse(1);
-  $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); };
+  $("btnSettings").onclick = () => { syncSegs(); showVersion(); openSheet($("sheetSettings")); };
   $("backdrop").onclick = closeAll;
   for (const btn of document.querySelectorAll("[data-close]")) btn.onclick = closeAll;
 
