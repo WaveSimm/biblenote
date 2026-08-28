@@ -9,10 +9,12 @@ export const DEFAULTS = {
   verB: "niv",
   pos: { b: 1, c: 1, v: 1 },      // 마지막 위치 (창1 기준)
   fontSize: 2,                    // 0~4
+  lineHeight: 2,                  // 0~3 (120 / 150 / 180 / 200 %)
   theme: "auto",                  // auto | light | dark
   face: "serif",                  // serif | sans
   vnum: true,                     // 절 번호 표시
   chmarks: true,                  // 여백 장 번호
+  vbreak: false,                  // 절마다 줄바꿈 (기본: 이어쓰기)
   recentBooks: [],                // 최근 이동한 책 번호
 };
 

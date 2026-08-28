@@ -48,22 +48,42 @@ body {
   background: var(--bar-bg); backdrop-filter: blur(8px);
 }
 #topbar {
-  top: 0; padding: calc(env(safe-area-inset-top) + 8px) 12px 8px;
+  top: 0; padding: calc(env(safe-area-inset-top) + 4px) 6px 4px;
   border-bottom: 1px solid var(--line);
+  gap: 2px;
 }
 #bottombar {
   bottom: 0; padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
   border-top: 1px solid var(--line);
-  justify-content: space-around;
+  justify-content: space-around; gap: 6px;
 }
-#navloc { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0; min-width: 0; }
+#navloc { flex: 1; display: flex; align-items: center; justify-content: center; gap: 2px; min-width: 0; }
+/* 현재 위치: 상단 바의 유일한 글자 — 또렷하게 */
 #loc {
-  background: none; border: none; cursor: pointer;
-  font-size: 14px; color: var(--muted); padding: 6px 4px;
+  background: none; border: none; cursor: pointer; border-radius: 10px;
+  font-size: 17px; font-weight: 600; color: var(--fg);
+  padding: 10px 6px; margin: 0 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
-.iconbtn.nav { padding: 6px 5px; font-size: 14px; color: var(--muted); }
-.iconbtn.nav .dbl { letter-spacing: -0.32em; display: inline-block; margin-right: 0.32em; }
+/* 장·절 이동: 옆 버튼이 잘못 눌리지 않도록 넉넉한 터치 영역 */
+.iconbtn.nav {
+  font-size: 20px; line-height: 1; color: var(--muted);
+  padding: 11px 7px; min-width: 40px; border-radius: 10px;
+}
+.iconbtn.nav .dbl { letter-spacing: -0.3em; display: inline-block; margin-right: 0.3em; }
+.iconbtn.hist { font-size: 19px; color: var(--fg); padding: 11px 6px; min-width: 36px; }
+/* 이동 기록 버튼은 비활성일 때도 자리와 형태가 보이도록 */
+.iconbtn.hist:disabled { opacity: .32; }
+/* 장 이동 아이콘 바깥에 살짝 띄워 붙여 내비게이션 묶음으로 보이게 */
+#btnBack { margin-right: 10px; }
+#btnFwd { margin-left: 10px; }
+@media (max-width: 380px) {
+  .iconbtn.nav { min-width: 36px; padding: 11px 5px; font-size: 18px; }
+  .iconbtn.hist { min-width: 32px; padding: 11px 4px; }
+  #btnBack { margin-right: 6px; }
+  #btnFwd { margin-left: 6px; }
+  #loc { font-size: 16px; padding: 10px 4px; }
+}
 
 .chip {
   border: 1px solid var(--line); background: var(--chip-bg); color: var(--fg);
@@ -97,8 +117,8 @@ body.compare .pane + .pane { border-top: 2px solid var(--line); }
 .content {
   position: relative;
   max-width: 44em; margin: 0 auto;
-  padding: 84px 22px 96px;
-  font-size: var(--fs, 19px); line-height: 1.85;
+  padding: calc(var(--topbar-h, 56px) + 24px) 22px calc(var(--bottombar-h, 56px) + 40px);
+  font-size: var(--fs, 19px); line-height: var(--lh, 1.8);
 }
 body.serif .content { font-family: "Noto Serif KR", Georgia, "Times New Roman", serif; }
 
@@ -116,7 +136,7 @@ body.chmarks p.ch::before {
   position: absolute; right: 100%; margin-right: .2em; top: 0;
   font-size: 1em; font-weight: 600; color: var(--muted);
   font-family: "Noto Sans KR", sans-serif;
-  line-height: calc(var(--fs, 19px) * 1.85);
+  line-height: calc(var(--fs, 19px) * var(--lh, 1.8));
 }
 /* 여백(22px) 안에 들어가도록 자릿수별 크기 보정 */
 body.chmarks p.ch.c2::before { font-size: .78em; }
@@ -124,12 +144,16 @@ body.chmarks p.ch.c3::before { font-size: .6em; }
 
 /* 절: 이어쓰기 + 위첨자 번호 */
 span.v { }
+/* 번호 + 첫 어절: 줄바꿈 금지 — 번호만 줄 끝에 남는 것을 막는다 */
+span.vh { white-space: nowrap; }
 span.v sup {
   font-size: .58em; color: var(--vnum);
   margin-right: .15em; font-family: "Noto Sans KR", sans-serif;
   user-select: none;
 }
 body.novnum span.v sup { display: none; }
+/* 절 줄바꿈 모드: 설교·찾아보기용 — 절마다 새 줄에서 시작 */
+body.vbreaks span.v { display: block; }
 span.v.miss sup { opacity: .3; }
 span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 @keyframes flash { 0% { background: color-mix(in srgb, var(--accent) 28%, transparent); } 100% { background: transparent; } }

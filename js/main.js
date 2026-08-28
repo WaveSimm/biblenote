@@ -3,7 +3,7 @@ import { buildAliases, parseRef } from "./parser.js";
 import { loadSettings, saveSettings, loadHistory, saveHistory } from "./store.js";
 
 const $ = (id) => document.getElementById(id);
-const TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px)
+let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
 let settings, hist;
 let paneA, paneB, active;
@@ -48,7 +48,14 @@ class Pane {
         s.dataset.v = vi + 1;
         const sup = document.createElement("sup");
         sup.textContent = vi + 1;
-        s.append(sup, document.createTextNode(t == null ? " " : t + " "));
+        const text = t == null ? " " : t + " ";
+        // 절 번호가 줄 끝에 혼자 남지 않도록 첫 어절(최대 5자)과 한 덩어리로 묶는다
+        const sp = text.indexOf(" ");
+        const cut = Math.min(sp === -1 ? text.length : sp, 5);
+        const head = document.createElement("span");
+        head.className = "vh";
+        head.append(sup, document.createTextNode(text.slice(0, cut)));
+        s.append(head, document.createTextNode(text.slice(cut)));
         p.append(s);
       });
       sec.append(p);
@@ -189,22 +196,45 @@ async function syncOther(pane, ref) {
   other.scrollToVerse(ref.b, ref.c, v);
 }
 
-/* ================= 이동/히스토리 ================= */
+/* ================= 이동/히스토리 =================
+   기록은 "머물렀던 자리"의 목록이고 hist.idx가 현재 자리다.
+   자리를 떠나기 직전에 실제로 보고 있던 절을 그 자리에 적어 두므로,
+   되돌아오면 검색하던 그 지점으로, 다시 앞으로 가면 떠나온 지점으로 온다. */
 async function jumpTo(ref, opts = {}) {
-  curRef = { b: ref.b, c: ref.c, v: ref.v };
-  await paneA.jump(ref.b, ref.c, ref.v, { flash: true });
-  if (settings.mode === "compare") await paneB.jump(ref.b, ref.c, ref.v, { flash: true });
+  const to = { b: ref.b, c: ref.c, v: ref.v };
+  if (opts.push !== false) pushHistory(to, curRef);
+  curRef = to;
+  await paneA.jump(to.b, to.c, to.v, { flash: true });
+  if (settings.mode === "compare") await paneB.jump(to.b, to.c, to.v, { flash: true });
   updateLoc(curRef);
-  addRecentBook(ref.b);
-  if (opts.push !== false) pushHistory(curRef, opts.query);
+  addRecentBook(to.b);
   schedSavePos();
 }
 
-function pushHistory(ref, query) {
-  const last = hist.entries[hist.idx];
-  if (last && last.b === ref.b && last.c === ref.c && last.v === ref.v) return;
+const sameRef = (a, b) => !!a && !!b && a.b === b.b && a.c === b.c && a.v === b.v;
+
+// 현재 항목에 '지금 보고 있는 절'을 적어 둔다 (삼각형 이동·스크롤한 만큼 반영)
+function stampCurrent(ref) {
+  const e = hist.entries[hist.idx];
+  if (!e || !ref) return;
+  e.b = ref.b; e.c = ref.c; e.v = ref.v;
+}
+
+function pushHistory(to, from) {
+  if (!hist.entries.length) {
+    // 첫 이동: 떠나온 자리를 먼저 넣어 둬야 되돌아올 곳이 생긴다
+    hist.entries.push({ b: from.b, c: from.c, v: from.v, ts: Date.now() });
+    hist.idx = 0;
+  } else {
+    stampCurrent(from);
+  }
+  if (sameRef(hist.entries[hist.idx], to)) {   // 제자리 이동
+    saveHistory(hist);
+    updateNavButtons();
+    return;
+  }
   hist.entries = hist.entries.slice(0, hist.idx + 1);
-  hist.entries.push({ b: ref.b, c: ref.c, v: ref.v, ts: Date.now() });
+  hist.entries.push({ b: to.b, c: to.c, v: to.v, ts: Date.now() });
   if (hist.entries.length > 100) hist.entries.shift();
   hist.idx = hist.entries.length - 1;
   saveHistory(hist);
@@ -212,14 +242,18 @@ function pushHistory(ref, query) {
   renderHistoryList();
 }
 
-function goHistory(delta) {
-  const ni = hist.idx + delta;
-  if (ni < 0 || ni >= hist.entries.length) return;
-  hist.idx = ni;
+// 기록 안에서 자리 이동 (↶ ↷, 최근 이동 목록)
+function moveHistory(toIdx) {
+  if (toIdx < 0 || toIdx >= hist.entries.length || toIdx === hist.idx) return;
+  stampCurrent(curRef);          // 떠나기 직전 위치를 남겨 둔다
+  hist.idx = toIdx;
   saveHistory(hist);
-  jumpTo(hist.entries[ni], { push: false });
+  jumpTo(hist.entries[toIdx], { push: false });
   updateNavButtons();
+  renderHistoryList();
 }
+
+function goHistory(delta) { moveHistory(hist.idx + delta); }
 
 /* ---- 장/절 단위 이동 (상단 삼각형) ---- */
 function stepVerse(dir) {
@@ -269,10 +303,7 @@ function renderHistoryList() {
     btn.textContent = refLabel(e, { abbr: true });
     if (i === hist.idx) btn.style.fontWeight = "700";
     btn.onclick = () => {
-      hist.idx = i;
-      saveHistory(hist);
-      jumpTo(e, { push: false });
-      updateNavButtons();
+      moveHistory(i);
       closeAll();
     };
     box.append(btn);
@@ -289,6 +320,16 @@ function schedSavePos() {
   }, 800);
 }
 
+// 상·하단 바의 실제 높이를 본문 여백(--topbar-h/--bottombar-h)과 기준선에 반영
+function syncBarMetrics() {
+  const th = $("topbar").offsetHeight;
+  const bh = $("bottombar").offsetHeight;
+  const root = document.documentElement.style;
+  root.setProperty("--topbar-h", th + "px");
+  root.setProperty("--bottombar-h", bh + "px");
+  TOP_OFFSET = th + 8;
+}
+
 function updateLoc(ref) {
   $("loc").textContent = refLabel(ref);
 }
@@ -301,7 +342,7 @@ function addRecentBook(b) {
 /* ================= 시트/팝오버 ================= */
 function openSheet(el) { closeAll(); $("backdrop").hidden = false; el.hidden = false; }
 function closeAll() {
-  for (const id of ["sheetBooks", "sheetSearch", "sheetSettings", "verPop"]) $(id).hidden = true;
+  for (const id of ["sheetSearch", "sheetSettings", "verPop"]) $(id).hidden = true;
   $("backdrop").hidden = true;
 }
 
@@ -328,7 +369,13 @@ function openVerPop(slot, anchor) {
   $("backdrop").hidden = false;
   pop.hidden = false;
   const r = anchor.getBoundingClientRect();
-  pop.style.top = (r.bottom + 6) + "px";
+  if (r.bottom + 6 + pop.offsetHeight <= innerHeight - 8) {
+    pop.style.top = (r.bottom + 6) + "px";
+    pop.style.bottom = "";
+  } else {
+    pop.style.bottom = (innerHeight - r.top + 6) + "px";
+    pop.style.top = "";
+  }
   pop.style.left = Math.max(8, Math.min(r.left, innerWidth - pop.offsetWidth - 8)) + "px";
 }
 
@@ -407,14 +454,24 @@ function wireSearch() {
 
 /* ---- 설정 ---- */
 const FS = ["15px", "17px", "19px", "21.5px", "24px"];
+const LH = ["1.2", "1.5", "1.8", "2.0"];     // 줄간격 120 / 150 / 180 / 200 %
 
 function applySettings() {
   document.documentElement.style.setProperty("--fs", FS[settings.fontSize]);
+  document.documentElement.style.setProperty("--lh", LH[settings.lineHeight]);
   document.body.classList.toggle("serif", settings.face === "serif");
   document.body.classList.toggle("novnum", !settings.vnum);
   document.body.classList.toggle("chmarks", settings.chmarks);
+  document.body.classList.toggle("vbreaks", settings.vbreak);
+  $("btnVBreak").classList.toggle("on", settings.vbreak);
   applyTheme();
   syncSegs();
+}
+
+// 조판이 바뀌면 본문 높이가 달라지므로 읽던 절로 다시 맞춘다
+function refitToCurrent() {
+  paneA.scrollToVerse(curRef.b, curRef.c, curRef.v);
+  if (settings.mode === "compare") paneB.scrollToVerse(curRef.b, curRef.c, curRef.v);
 }
 
 function applyTheme() {
@@ -435,6 +492,7 @@ function syncSegs() {
       btn.classList.toggle("on", btn.dataset[attr] === String(val));
   };
   mark("segFont", "fs", settings.fontSize);
+  mark("segLine", "lh", settings.lineHeight);
   mark("segTheme", "theme", settings.theme);
   mark("segFace", "face", settings.face);
   mark("segVnum", "vnum", settings.vnum ? 1 : 0);
@@ -443,11 +501,12 @@ function syncSegs() {
 
 function wireSettings() {
   $("segFont").onclick = (e) => { if (e.target.dataset.fs) { settings.fontSize = +e.target.dataset.fs; done(); } };
+  $("segLine").onclick = (e) => { if (e.target.dataset.lh) { settings.lineHeight = +e.target.dataset.lh; done(); } };
   $("segTheme").onclick = (e) => { if (e.target.dataset.theme) { settings.theme = e.target.dataset.theme; done(); } };
   $("segFace").onclick = (e) => { if (e.target.dataset.face) { settings.face = e.target.dataset.face; done(); } };
   $("segVnum").onclick = (e) => { if (e.target.dataset.vnum) { settings.vnum = e.target.dataset.vnum === "1"; done(); } };
   $("segChmark").onclick = (e) => { if (e.target.dataset.chmark) { settings.chmarks = e.target.dataset.chmark === "1"; done(); } };
-  function done() { saveSettings(settings); applySettings(); }
+  function done() { saveSettings(settings); applySettings(); refitToCurrent(); }
 }
 
 /* ---- 비교 모드 ---- */
@@ -467,6 +526,7 @@ async function setCompare(on) {
     await paneB.jump(curRef.b, curRef.c, curRef.v);
   }
   // 레이아웃 변경 후 pane A 위치 재조정
+  syncBarMetrics();
   paneA.scrollToVerse(curRef.b, curRef.c, curRef.v);
 }
 
@@ -486,18 +546,24 @@ async function main() {
   paneB = new Pane($("paneB"), settings.verB);
   active = paneA;
   updateChips();
+  syncBarMetrics();
 
   // 바 버튼
   $("chipA").onclick = (e) => openVerPop("A", e.currentTarget);
   $("chipB").onclick = (e) => openVerPop("B", e.currentTarget);
   $("btnCompare").onclick = () => setCompare(settings.mode !== "compare");
+  $("btnVBreak").onclick = () => {
+    settings.vbreak = !settings.vbreak;
+    saveSettings(settings);
+    applySettings();
+    refitToCurrent();
+  };
   $("btnBack").onclick = () => goHistory(-1);
   $("btnFwd").onclick = () => goHistory(1);
-  $("btnBooks").onclick = () => { renderBookGrid(); openSheet($("sheetBooks")); };
   $("loc").onclick = () => {
     renderHistoryList();
+    renderBookGrid();
     openSheet($("sheetSearch"));
-    setTimeout(() => $("searchInput").focus(), 80);
   };
   $("btnPrevCh").onclick = () => stepChapter(-1);
   $("btnNextCh").onclick = () => stepChapter(1);
@@ -512,6 +578,7 @@ async function main() {
   addEventListener("resize", () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
+      syncBarMetrics();
       paneA.scrollToVerse(curRef.b, curRef.c, curRef.v);
       if (settings.mode === "compare") paneB.scrollToVerse(curRef.b, curRef.c, curRef.v);
     }, 250);
