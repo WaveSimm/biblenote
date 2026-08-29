@@ -132,7 +132,7 @@ export function importNotes(arr, { imported = true } = {}) {
   let added = 0;
   for (const raw of arr) {
     const n = { ...raw };
-    if (!n.id) n.id = uid();
+    if (!n.id) n.id = uid();          // id 는 부르는 쪽에서 정해 오는 게 낫다 (다시 가져와도 늘지 않게)
     if (byId.has(n.id)) continue;
     if (imported) n.imported = true;
     if (typeof n.body !== "string") n.body = (n.body || []).join("\n");

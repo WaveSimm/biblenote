@@ -6,8 +6,9 @@ import { initFind, openFind } from "./search.js";
 import * as Notes from "./notes.js";
 import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
+import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v20";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
+const APP_VERSION = "v21";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -367,6 +368,20 @@ let draftAnchors = [];
 function remarkDraft() { if (draftAnchors.length) markDraft(draftAnchors); }
 
 // 노트를 저장·삭제한 뒤, 그 노트가 걸린 절들의 표시만 다시 맞춘다
+// 가져오기처럼 한꺼번에 바뀔 때 — 화면에 있는 절만 다시 훑는다 (많아야 3권)
+function remarkAllNoted() {
+  for (const pane of [paneA, paneB]) {
+    if (!pane) continue;
+    for (const p of pane.content.querySelectorAll("p.ch")) {
+      const b = +p.dataset.b, c = +p.dataset.c;
+      for (const sp of p.children) {
+        if (sp.tagName !== "SPAN") continue;
+        sp.classList.toggle("noted", Notes.hasNoteAt(b, c, +sp.dataset.v));
+      }
+    }
+  }
+}
+
 function refreshNoted(anchors) {
   refreshVerseNotes();
   for (const a of anchors || []) {
@@ -619,6 +634,7 @@ async function main() {
     openSheet, closeAll,
     openNote: (o) => openNote(o),
   });
+  initNotesIO({ onImported: remarkAllNoted });
 
   paneA = new Pane($("paneA"), settings.verA);
   paneB = new Pane($("paneB"), settings.verB);
@@ -654,7 +670,7 @@ async function main() {
     const ref = active.topRef() || curRef;
     openNote({ ref, label: refLabel(ref, { abbr: true }).replace(" ", "") });
   };
-  $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); renderOffline(); };
+  $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); renderOffline(); paintUsage(); };
   $("backdrop").onclick = closeAll;
   // 닫기 단추가 어떤 이유로든 안 눌릴 때를 대비한 탈출구
   addEventListener("keydown", (e) => { if (e.key === "Escape") closeAll(); });

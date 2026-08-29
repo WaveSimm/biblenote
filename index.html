@@ -175,6 +175,15 @@
     </div>
   </div>
   <div class="set-row col">
+    <div class="dl-head"><span>설교노트</span><span id="ioUsage"></span></div>
+    <div class="io-row">
+      <label class="io-btn" for="ioImport">가져오기</label>
+      <input id="ioImport" type="file" accept="application/json,.json" hidden>
+      <button class="io-btn" id="ioExport">내보내기</button>
+    </div>
+    <div id="ioStat"></div>
+  </div>
+  <div class="set-row col">
     <div class="dl-head"><span>오프라인 저장</span><span id="dlTotal"></span></div>
     <div id="dlList"></div>
     <button id="dlAll">전체 받기</button>
