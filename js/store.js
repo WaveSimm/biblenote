@@ -3,7 +3,6 @@ const S_KEY = "biblenote.settings.v1";
 const H_KEY = "biblenote.history.v1";
 
 export const DEFAULTS = {
-  favorites: ["krv", "nkr", "niv", "msg"],
   mode: "single",                 // "single" | "compare"
   verA: "krv",
   verB: "niv",

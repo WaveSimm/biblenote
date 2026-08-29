@@ -193,19 +193,38 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 }
 
 /* search */
-#searchForm { display: flex; flex-wrap: wrap; gap: 8px; }
-#searchInput {
+#searchForm, #findForm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#searchInput, #findInput {
   flex: 1 1 100%; font-size: 17px; padding: 11px 14px;
   border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg);
   outline: none;
 }
-#searchInput:focus { border-color: var(--accent); }
+#searchInput:focus, #findInput:focus { border-color: var(--accent); }
 #searchPreview { flex: 1; font-size: 13px; color: var(--accent); padding: 4px 2px; min-height: 1.2em; }
-#searchGo {
+#searchGo, #findGo {
   border: none; background: var(--chip-on); color: var(--chip-on-fg);
   border-radius: 12px; padding: 8px 22px; font-size: 15px; font-weight: 600; cursor: pointer;
 }
-#searchGo:disabled { opacity: .3; }
+#searchGo:disabled, #findGo:disabled { opacity: .3; }
+#findGo { margin-left: auto; }
+
+/* 본문 검색 결과 */
+#findStat { font-size: 12px; color: var(--muted); padding: 10px 2px 4px; min-height: 1.2em; font-variant-numeric: tabular-nums; }
+#findResults { max-height: 46vh; overflow-y: auto; overscroll-behavior: contain; }
+#findResults:empty { display: none; }
+.find-item {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  border: none; border-bottom: 1px solid var(--line); background: none; color: var(--fg);
+  padding: 10px 2px; font-size: 14px; line-height: 1.6; font-family: inherit;
+}
+.find-item:last-child { border-bottom: none; }
+.find-ref { display: block; font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 2px; }
+.find-item mark {
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
+  color: inherit; border-radius: 3px; padding: 0 1px;
+}
+/* 돋보기: 다른 글자 아이콘과 같은 무게로 보이도록 */
+#btnFind { display: inline-flex; align-items: center; padding: 7px 10px; color: var(--fg); }
 
 /* settings */
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }

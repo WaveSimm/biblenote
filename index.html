@@ -43,6 +43,11 @@
   <button class="chip" id="chipB" hidden></button>
   <button class="iconbtn" id="btnCompare" title="비교 모드(2권 보기)">⇆</button>
   <button class="iconbtn" id="btnVBreak" title="절마다 줄바꿈">절<span class="ret">↵</span></button>
+  <button class="iconbtn" id="btnFind" title="본문 검색" aria-label="본문 검색">
+    <svg viewBox="0 0 20 20" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+      <circle cx="8.6" cy="8.6" r="5.4"/><path d="M12.6 12.6 17 17"/>
+    </svg>
+  </button>
   <button class="iconbtn" id="btnSettings" title="보기 설정">Aa</button>
 </nav>
 
@@ -66,6 +71,24 @@
   <div id="recentBooks" class="recent-row"></div>
   <div id="bookGrid" class="grid"></div>
   <div id="chapGrid" class="grid" hidden></div>
+</div>
+
+<!-- 본문 검색 시트 -->
+<div id="sheetFind" class="sheet" hidden>
+  <div class="sheet-head">
+    <span>본문 검색</span>
+    <span id="findVer" class="ver" title="검색 대상 번역본"></span>
+    <button class="iconbtn sheet-close" data-close>✕</button>
+  </div>
+  <form id="findForm" autocomplete="off">
+    <input id="findInput" type="search" placeholder="찾을 말 (예: 사랑, 선한 목자)" inputmode="search" enterkeyhint="search">
+    <div class="seg" id="segScope">
+      <button type="button" data-scope="all">전체</button><button type="button" data-scope="ot">구약</button><button type="button" data-scope="nt">신약</button>
+    </div>
+    <button type="submit" id="findGo" disabled>찾기</button>
+  </form>
+  <div id="findStat"></div>
+  <div id="findResults"></div>
 </div>
 
 <!-- 설정 시트 -->
