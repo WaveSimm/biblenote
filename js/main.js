@@ -5,8 +5,9 @@ import { renderOffline } from "./offline.js";
 import { initFind, openFind } from "./search.js";
 import * as Notes from "./notes.js";
 import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
+import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 
-const APP_VERSION = "v18";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
+const APP_VERSION = "v19";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -29,6 +30,13 @@ class Pane {
     this.root.addEventListener("scroll", () => this.onScroll(), { passive: true });
     for (const ev of ["pointerdown", "wheel", "touchstart"])
       this.root.addEventListener(ev, () => { active = this; }, { passive: true });
+    this.root.addEventListener("click", (e) => {
+      const sp = e.target.closest && e.target.closest("span.v.noted");
+      if (!sp) return;
+      const p = sp.closest("p.ch");
+      const b = +p.dataset.b, c = +p.dataset.c, v = +sp.dataset.v;
+      openVerseNotes(b, c, v, refLabel({ b, c, v }));
+    });
   }
 
   async buildBook(b) {
@@ -49,7 +57,8 @@ class Pane {
       p.dataset.c = cn;
       verses.forEach((t, vi) => {
         const s = document.createElement("span");
-        s.className = "v" + (t == null ? " miss" : "");
+        s.className = "v" + (t == null ? " miss" : "")
+                          + (Notes.hasNoteAt(b, cn, vi + 1) ? " noted" : "");
         s.dataset.v = vi + 1;
         const sup = document.createElement("sup");
         sup.textContent = vi + 1;
@@ -357,6 +366,20 @@ let draftAnchors = [];
 // 본문이 다시 그려지면(이동·확장·번역본 교체) 표시가 사라지므로 다시 칠한다
 function remarkDraft() { if (draftAnchors.length) markDraft(draftAnchors); }
 
+// 노트를 저장·삭제한 뒤, 그 노트가 걸린 절들의 표시만 다시 맞춘다
+function refreshNoted(anchors) {
+  refreshVerseNotes();
+  for (const a of anchors || []) {
+    const last = a.endV && a.endV >= a.v ? a.endV : a.v;
+    for (let v = a.v; v <= last; v++) {
+      for (const pane of [paneA, paneB]) {
+        const el = pane && pane.findVerse(a.book, a.c, v);
+        if (el) el.classList.toggle("noted", Notes.hasNoteAt(a.book, a.c, v));
+      }
+    }
+  }
+}
+
 function markDraft(anchors) {
   draftAnchors = anchors;
   for (const el of draftMarked) el.classList.remove("draft");
@@ -590,6 +613,11 @@ async function main() {
   initNoteEdit({
     jumpBible: (ref) => jumpTo(ref, { push: false }),
     markDraft,
+    onSaved: refreshNoted,
+  });
+  initVerseNotes({
+    openSheet, closeAll,
+    openNote: (o) => openNote(o),
   });
 
   paneA = new Pane($("paneA"), settings.verA);
@@ -628,6 +656,8 @@ async function main() {
   };
   $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); renderOffline(); };
   $("backdrop").onclick = closeAll;
+  // 닫기 단추가 어떤 이유로든 안 눌릴 때를 대비한 탈출구
+  addEventListener("keydown", (e) => { if (e.key === "Escape") closeAll(); });
   for (const btn of document.querySelectorAll("[data-close]")) btn.onclick = closeAll;
 
   // 화면 회전/크기 변경 시 현재 절 위치 유지

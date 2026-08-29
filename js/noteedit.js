@@ -68,9 +68,22 @@ function save() {
   note.body = $("noteText").value;
   note.title = $("noteTitle").value.trim() || undefined;
   note.preacher = $("notePreacherIn").value.trim() || undefined;
-  if (!note.body.trim() && !note.title) return;    // 빈 노트는 만들지 않는다
+  if (!note.body.trim() && !note.title) {
+    // 새 노트라면 만들지 않는다. 그런데 있던 노트를 비운 것이라면 지워야 한다 —
+    // 그냥 돌아가면 저장소에 옛 내용이 남아 절 표시도 그대로 남는다.
+    if (note.id && Notes.get(note.id)) {
+      const gone = anchors;
+      Notes.remove(note.id);
+      anchors = [];
+      if (hooks.onSaved) hooks.onSaved(gone);
+    }
+    return;
+  }
+  const before = anchors;
   Notes.put(note);
   anchors = note.anchors;
+  // 저장으로 절 표시가 달라질 수 있다 — 사라진 앵커까지 함께 넘겨 되돌린다
+  if (hooks.onSaved) hooks.onSaved([...before, ...anchors]);
 }
 
 /* ---------- 열기·닫기 ---------- */
@@ -97,8 +110,10 @@ export function initNoteEdit(h) {
   $("noteReturn").onclick = toNote;
   $("noteDel").onclick = () => {
     if (!note) return;
+    const gone = anchors;
     if (note.id && Notes.get(note.id)) Notes.remove(note.id);
     note = null;
+    if (hooks.onSaved) hooks.onSaved(gone);
     closeNote();
   };
 }

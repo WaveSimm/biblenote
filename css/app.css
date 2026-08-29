@@ -18,6 +18,7 @@ html, body { margin: 0; height: 100%; overscroll-behavior: none; }
   --ot: #8a6d3b;
   --nt: #4a6a8a;
   --vnum: #3a6db0;
+  --noted: #a08a5e;      /* 노트가 있는 절 — accent 보다 옅게 */
 }
 [data-theme="dark"] {
   --bg: #17181c;
@@ -34,6 +35,7 @@ html, body { margin: 0; height: 100%; overscroll-behavior: none; }
   --ot: #b08d54;
   --nt: #7096ba;
   --vnum: #7fa9dd;
+  --noted: #8d7f63;
 }
 
 body {
@@ -334,9 +336,6 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
   background: var(--chip-on); color: var(--chip-on-fg); border-color: var(--chip-on);
 }
 
-/* 작성 중인 노트의 앵커 — 저장된 노트 표시보다 진하게 (설계문서 §7.4) */
-span.v.draft > .vh { color: var(--accent); font-weight: 600; }
-
 /* 이동 시트의 노트 단추 */
 #searchNote {
   border: 1px solid var(--line); background: var(--chip-bg); color: var(--fg);
@@ -348,11 +347,40 @@ span.v.draft > .vh { color: var(--accent); font-weight: 600; }
 /* 넓은 화면에서는 나눠서 같이 본다 — 키보드가 화면을 먹지 않으므로 */
 @media (min-width: 820px) {
   body.noting #noteView { left: auto; width: min(46vw, 640px); border-left: 1px solid var(--line); }
-  /* 본문뿐 아니라 상·하단 바도 같이 좁혀야 한다.
-     바는 left:0;right:0 이라 그냥 두면 노트 패널(z-index 70) 밑으로 들어가
-     오른쪽 끝 아이콘(검색·노트·설정)을 누를 수 없게 된다. */
+  /* 본문뿐 아니라 바·시트·배경도 같이 좁혀야 한다.
+     이들은 left:0;right:0 이라 그냥 두면 오른쪽 끝이 노트 패널(z-index 70)
+     밑으로 들어간다. 실제로 하단 바의 아이콘 세 개와 시트의 닫기(✕) 버튼이
+     가려져 눌리지 않았다. */
   body.noting #panes,
   body.noting #topbar,
-  body.noting #bottombar { right: min(46vw, 640px); }
+  body.noting #bottombar,
+  body.noting #backdrop,
+  body.noting .sheet { right: min(46vw, 640px); }
   body.noting #noteToBible, body.noting #noteReturn { display: none; }
 }
+
+/* 저장된 노트가 있는 절 — 첫 단어 색만 바꾼다.
+   점·밑줄·아이콘을 쓰지 않는 이유: '장절 구분 없이 읽는다'는 철학을 깨지 않으려고.
+   절 번호 숨김 모드에서도 그대로 동작한다. */
+span.v.noted > .vh { color: var(--noted); }
+span.v.noted { cursor: pointer; }
+/* 작성 중인 노트는 저장된 것보다 진하게 (설계문서 §7.4) */
+span.v.draft > .vh { color: var(--accent); font-weight: 600; }
+
+/* 절 노트 시트 */
+#verseNotes { max-height: 60vh; overflow-y: auto; overscroll-behavior: contain; }
+.vn-note { border-bottom: 1px solid var(--line); padding: 12px 0; }
+.vn-note:last-child { border-bottom: none; }
+.vn-head { display: flex; align-items: baseline; gap: 8px; font-size: 12px; color: var(--muted); }
+.vn-title { font-size: 15px; font-weight: 600; color: var(--fg); margin: 3px 0 6px; }
+.vn-body {
+  font-size: 14px; line-height: 1.7; white-space: pre-wrap;
+  overflow-wrap: break-word; word-break: break-word;
+}
+/* 눌린 절에 해당하는 조각만 강조 — 앞뒤 맥락은 그대로 둔다 (설계문서 §6) */
+.vn-body .hit { background: color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 4px; }
+.vn-open {
+  margin-top: 8px; border: 1px solid var(--line); background: var(--chip-bg); color: var(--fg);
+  border-radius: 999px; padding: 5px 14px; font-size: 12px; cursor: pointer; font-family: inherit;
+}
+.vn-imported { font-size: 11px; color: var(--faint); }
