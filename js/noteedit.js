@@ -71,8 +71,11 @@ function save() {
   if (!note.body.trim() && !note.title) {
     // 새 노트라면 만들지 않는다. 그런데 있던 노트를 비운 것이라면 지워야 한다 —
     // 그냥 돌아가면 저장소에 옛 내용이 남아 절 표시도 그대로 남는다.
-    if (note.id && Notes.get(note.id)) {
-      const gone = anchors;
+    const saved = note.id && Notes.get(note.id);
+    if (saved) {
+      // 지워야 할 절은 '저장돼 있던' 앵커다. 이 시점의 anchors 는 paint() 가
+      // 이미 빈 본문으로 다시 계산해 비워 놓았다.
+      const gone = saved.anchors || [];
       Notes.remove(note.id);
       anchors = [];
       if (hooks.onSaved) hooks.onSaved(gone);
@@ -110,8 +113,9 @@ export function initNoteEdit(h) {
   $("noteReturn").onclick = toNote;
   $("noteDel").onclick = () => {
     if (!note) return;
-    const gone = anchors;
-    if (note.id && Notes.get(note.id)) Notes.remove(note.id);
+    const saved = note.id && Notes.get(note.id);
+    const gone = (saved && saved.anchors) || anchors;
+    if (saved) Notes.remove(note.id);
     note = null;
     if (hooks.onSaved) hooks.onSaved(gone);
     closeNote();
