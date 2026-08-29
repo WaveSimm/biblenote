@@ -3,8 +3,10 @@ import { buildAliases, parseRef } from "./parser.js";
 import { loadSettings, saveSettings, loadHistory, saveHistory } from "./store.js";
 import { renderOffline } from "./offline.js";
 import { initFind, openFind } from "./search.js";
+import * as Notes from "./notes.js";
+import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
 
-const APP_VERSION = "v17";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
+const APP_VERSION = "v18";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -135,6 +137,7 @@ class Pane {
         this.suppressUntil = performance.now() + 250;
         this.root.scrollTop += this.root.scrollHeight - prev;
         this.prune("tail");
+        remarkDraft();
       } finally { this.busy = false; }
     } else if (sh - st - ch < 1500 && this.loaded[this.loaded.length - 1] < 66) {
       this.busy = true;
@@ -144,6 +147,7 @@ class Pane {
         this.content.append(sec);
         this.loaded.push(b);
         this.prune("head");
+        remarkDraft();
       } finally { this.busy = false; }
     }
   }
@@ -212,6 +216,7 @@ async function jumpTo(ref, opts = {}) {
   updateLoc(curRef);
   addRecentBook(to.b);
   schedSavePos();
+  remarkDraft();
 }
 
 const sameRef = (a, b) => !!a && !!b && a.b === b.b && a.c === b.c && a.v === b.v;
@@ -345,6 +350,28 @@ function addRecentBook(b) {
   saveSettings(settings);
 }
 
+/* ---- 작성 중인 노트의 앵커 표시 (설계문서 §7.4) ---- */
+let draftMarked = [];
+let draftAnchors = [];
+
+// 본문이 다시 그려지면(이동·확장·번역본 교체) 표시가 사라지므로 다시 칠한다
+function remarkDraft() { if (draftAnchors.length) markDraft(draftAnchors); }
+
+function markDraft(anchors) {
+  draftAnchors = anchors;
+  for (const el of draftMarked) el.classList.remove("draft");
+  draftMarked = [];
+  for (const a of anchors) {
+    const last = a.endV && a.endV >= a.v ? a.endV : a.v;
+    for (let v = a.v; v <= last; v++) {
+      for (const pane of [paneA, paneB]) {
+        const el = pane && pane.findVerse(a.book, a.c, v);
+        if (el) { el.classList.add("draft"); draftMarked.push(el); }
+      }
+    }
+  }
+}
+
 /* ================= 시트/팝오버 ================= */
 function openSheet(el) { closeAll(); $("backdrop").hidden = false; el.hidden = false; }
 function closeAll() {
@@ -445,6 +472,16 @@ function wireSearch() {
     parsed = parseRef(input.value, BOOKS);
     preview.textContent = parsed ? "→ " + refLabel(parsed) : " ";
     go.disabled = !parsed;
+  });
+  $("searchNote").addEventListener("click", () => {
+    if (!parsed) return;
+    closeAll();
+    openNote({ ref: parsed, label: refLabel(parsed, { abbr: true }).replace(" ", "") });
+    input.value = "";
+    preview.innerHTML = "&nbsp;";
+    go.disabled = true;
+    $("searchNote").disabled = true;
+    parsed = null;
   });
   $("searchForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -549,6 +586,11 @@ async function main() {
   wireSettings();
   // 검색 결과를 고르면 그 절로 이동한다 (히스토리에도 남는다)
   initFind({ onPick: (ref) => { closeAll(); jumpTo(ref); } });
+  Notes.initNotes(BOOKS);
+  initNoteEdit({
+    jumpBible: (ref) => jumpTo(ref, { push: false }),
+    markDraft,
+  });
 
   paneA = new Pane($("paneA"), settings.verA);
   paneB = new Pane($("paneB"), settings.verB);
@@ -579,6 +621,11 @@ async function main() {
   $("btnPrevV").onclick = () => stepVerse(-1);
   $("btnNextV").onclick = () => stepVerse(1);
   $("btnFind").onclick = () => { openSheet($("sheetFind")); openFind(active.version); };
+  // 성경을 읽다가 적고 싶어질 때 — 지금 보고 있는 절이 본문이 된다
+  $("btnNote").onclick = () => {
+    const ref = active.topRef() || curRef;
+    openNote({ ref, label: refLabel(ref, { abbr: true }).replace(" ", "") });
+  };
   $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); renderOffline(); };
   $("backdrop").onclick = closeAll;
   for (const btn of document.querySelectorAll("[data-close]")) btn.onclick = closeAll;

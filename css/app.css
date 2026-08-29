@@ -260,3 +260,99 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 
 /* misc */
 .loading { text-align: center; color: var(--muted); padding: 30px; font-size: 14px; }
+
+/* ================= 설교노트 ================= */
+
+#noteView {
+  position: fixed; inset: 0; z-index: 70;
+  display: flex; flex-direction: column;
+  background: var(--bg); color: var(--fg);
+}
+
+#noteBar {
+  display: flex; align-items: center; gap: 8px;
+  padding: calc(env(safe-area-inset-top) + 6px) 8px 6px;
+  border-bottom: 1px solid var(--line);
+}
+/* 설교 본문 — 이 노트의 좌표계라 가장 또렷하게 */
+#notePassage {
+  flex: 1; min-width: 0; font-size: 15px; font-weight: 600; color: var(--accent);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#notePassage.empty { color: var(--muted); font-weight: 400; }
+#noteDate { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+#noteMeta { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+#noteMeta input {
+  flex: 1; min-width: 0; font-size: 14px; padding: 8px 10px; font-family: inherit;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: var(--bg); color: var(--fg); outline: none;
+}
+#noteMeta input:focus { border-color: var(--accent); }
+#notePreacherIn { flex: 0 0 34%; }
+
+/* 편집기 — 투명 textarea 뒤에 색칠한 사본을 겹친다.
+   두 층의 글꼴·크기·줄간격·여백·줄바꿈 규칙이 하나라도 다르면 글자가 어긋난다. */
+#noteEditor { position: relative; flex: 1; min-height: 0; }
+#noteHL, #noteText {
+  position: absolute; inset: 0;
+  margin: 0; border: 0; padding: 12px 14px;
+  font-family: "Noto Sans KR", -apple-system, sans-serif;
+  font-size: 16px; line-height: 1.75;
+  white-space: pre-wrap; overflow-wrap: break-word; word-break: break-word;
+  overflow-y: auto; -webkit-text-size-adjust: 100%;
+}
+#noteHL { color: var(--fg); pointer-events: none; }
+#noteText {
+  background: transparent; color: transparent; caret-color: var(--accent);
+  resize: none; outline: none; -webkit-appearance: none;
+}
+#noteText::placeholder { color: var(--faint); }
+/* 인식된 절 — 노트에서 색 = 성경으로 가는 길 */
+/* 인식된 절. 누르면 성경으로 가지만 클릭은 위에 덮인 textarea 가 받는다
+   (noteedit.js 의 click 처리 참조) — 여기서 pointer-events 를 살려도 소용없다. */
+#noteHL .ref { color: var(--vnum); font-weight: 600; }
+#noteHL .ref.passage { color: var(--accent); }
+#notePassage { cursor: pointer; }
+
+#noteFoot {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
+  border-top: 1px solid var(--line);
+}
+#noteStat { flex: 1; font-size: 12px; color: var(--muted); }
+#noteToBible, #noteReturn {
+  border: 1px solid var(--line); background: var(--chip-bg); color: var(--fg);
+  border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+/* 성경 쪽에서 노트로 돌아가는 단추 */
+#noteReturn {
+  position: fixed; z-index: 30;
+  right: 12px; bottom: calc(var(--bottombar-h, 56px) + env(safe-area-inset-bottom) + 16px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.22);
+  background: var(--chip-on); color: var(--chip-on-fg); border-color: var(--chip-on);
+}
+
+/* 작성 중인 노트의 앵커 — 저장된 노트 표시보다 진하게 (설계문서 §7.4) */
+span.v.draft > .vh { color: var(--accent); font-weight: 600; }
+
+/* 이동 시트의 노트 단추 */
+#searchNote {
+  border: 1px solid var(--line); background: var(--chip-bg); color: var(--fg);
+  border-radius: 12px; padding: 8px 18px; font-size: 15px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+#searchNote:disabled { opacity: .3; }
+
+/* 넓은 화면에서는 나눠서 같이 본다 — 키보드가 화면을 먹지 않으므로 */
+@media (min-width: 820px) {
+  body.noting #noteView { left: auto; width: min(46vw, 640px); border-left: 1px solid var(--line); }
+  /* 본문뿐 아니라 상·하단 바도 같이 좁혀야 한다.
+     바는 left:0;right:0 이라 그냥 두면 노트 패널(z-index 70) 밑으로 들어가
+     오른쪽 끝 아이콘(검색·노트·설정)을 누를 수 없게 된다. */
+  body.noting #panes,
+  body.noting #topbar,
+  body.noting #bottombar { right: min(46vw, 640px); }
+  body.noting #noteToBible, body.noting #noteReturn { display: none; }
+}
