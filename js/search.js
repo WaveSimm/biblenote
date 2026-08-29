@@ -1,6 +1,7 @@
 // 본문 단어 검색 — 지금 보고 있는 번역본 전체에서 낱말이 든 절을 찾는다.
 // 낱말을 여러 개 넣으면 그 전부를 담은 절만 나온다 ("하나님 사랑").
 import { BOOKS, loadBookOnce, versionMeta, refLabel } from "./data.js";
+import { initNoteList, renderNoteList } from "./notelist.js";
 
 const MAX_SHOW = 300;   // 목록에 그리는 최대 개수 (센 개수는 그대로 알려 준다)
 const WINDOW = 6;       // 미리 받아 둘 책 수
@@ -13,6 +14,7 @@ let curVersion = null;     // 지금 열려 있는 번역본
 let shownVersion = null;   // 화면에 남아 있는 결과가 어느 번역본 것인지
 let seq = 0;               // 검색 세대 — 새 검색이 시작되면 옛 검색은 스스로 멈춘다
 let running = false;
+let tab = "bible";       // "bible" | "note" — 목록과 검색을 한 화면에 둔다
 
 /* ---------- 낱말 처리 ---------- */
 
@@ -160,8 +162,31 @@ async function run(query) {
 
 /* ---------- 배선 ---------- */
 
+function setTab(next) {
+  tab = next;
+  for (const b of $("segFindTab").querySelectorAll("button"))
+    b.classList.toggle("on", b.dataset.tab === tab);
+  const bible = tab === "bible";
+  $("segScope").hidden = !bible;
+  $("findGo").hidden = !bible;
+  $("findStat").hidden = !bible;
+  $("findResults").hidden = !bible;
+  $("findVer").hidden = !bible;
+  $("noteStatLine").hidden = bible;
+  $("noteResults").hidden = bible;
+  $("findInput").placeholder = bible
+    ? "찾을 말 (예: 사랑, 선한 목자)"
+    : "제목·본문·설교자로 찾기 (비우면 전체)";
+  if (!bible) renderNoteList($("findInput").value);
+}
+
 export function initFind(opts) {
   onPick = opts.onPick;
+  initNoteList({ onPick: opts.onOpenNote });
+  $("segFindTab").onclick = (e) => {
+    const t = e.target.dataset.tab;
+    if (t && t !== tab) setTab(t);
+  };
 
   $("findForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -179,6 +204,7 @@ export function initFind(opts) {
 
   $("findInput").addEventListener("input", () => {
     $("findGo").disabled = !running && !$("findInput").value.trim();
+    if (tab === "note") renderNoteList($("findInput").value);   // 노트는 치는 대로 걸러진다
   });
 }
 
@@ -201,6 +227,7 @@ export function openFind(version) {
     shownVersion = null;
   }
   $("findGo").disabled = !running && !$("findInput").value.trim();
+  setTab(tab);
   $("findInput").focus();
   $("findInput").select();
 }

@@ -106,7 +106,9 @@
 <!-- 본문 검색 시트 -->
 <div id="sheetFind" class="sheet" hidden>
   <div class="sheet-head">
-    <span>본문 검색</span>
+    <div class="seg" id="segFindTab">
+      <button type="button" data-tab="bible">성경</button><button type="button" data-tab="note">노트</button>
+    </div>
     <span id="findVer" class="ver" title="검색 대상 번역본"></span>
     <button class="iconbtn sheet-close" data-close>✕</button>
   </div>
@@ -119,6 +121,8 @@
   </form>
   <div id="findStat"></div>
   <div id="findResults"></div>
+  <div id="noteStatLine" hidden></div>
+  <div id="noteResults" hidden></div>
 </div>
 
 <!-- 절 노트 시트: 그 절에 걸린 노트들 -->

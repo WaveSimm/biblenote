@@ -8,7 +8,7 @@ import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v21";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
+const APP_VERSION = "v22";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -623,7 +623,10 @@ async function main() {
   wireSearch();
   wireSettings();
   // 검색 결과를 고르면 그 절로 이동한다 (히스토리에도 남는다)
-  initFind({ onPick: (ref) => { closeAll(); jumpTo(ref); } });
+  initFind({
+    onPick: (ref) => { closeAll(); jumpTo(ref); },
+    onOpenNote: (id) => { closeAll(); openNote({ id }); },
+  });
   Notes.initNotes(BOOKS);
   initNoteEdit({
     jumpBible: (ref) => jumpTo(ref, { push: false }),
