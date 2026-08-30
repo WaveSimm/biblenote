@@ -111,6 +111,8 @@ export function initNoteEdit(h) {
   $("noteBack").onclick = closeNote;
   $("notePassage").onclick = () => { if (anchors[0]) gotoAnchor(anchors[0]); };
   $("noteToBible").onclick = () => toBible();
+  // 노트를 쓰다가 지난 노트를 찾아볼 수 있게 — 시트가 이 화면 위로 열린다
+  $("noteFind").onclick = () => { save(); hooks.openNoteList && hooks.openNoteList(); };
   $("noteReturn").onclick = toNote;
   $("noteDel").onclick = () => {
     if (!note) return;

@@ -106,7 +106,7 @@ body {
 
 /* ---- version popover ---- */
 .pop {
-  position: fixed; z-index: 60; display: flex; gap: 6px; flex-wrap: wrap;
+  position: fixed; z-index: 95; display: flex; gap: 6px; flex-wrap: wrap;
   background: var(--sheet-bg); border: 1px solid var(--line); border-radius: 14px;
   padding: 10px; box-shadow: 0 8px 30px rgba(0,0,0,.18); max-width: 90vw;
 }
@@ -164,9 +164,10 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 @keyframes flash { 0% { background: color-mix(in srgb, var(--accent) 28%, transparent); } 100% { background: transparent; } }
 
 /* ---- sheets ---- */
-#backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 40; }
+/* 시트는 노트 화면(z-index 70) 위로 와야 한다 — 노트를 쓰다가 목록을 열 수 있게 */
+#backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 80; }
 .sheet {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
   background: var(--sheet-bg); border-radius: 18px 18px 0 0;
   padding: 14px 16px calc(env(safe-area-inset-bottom) + 16px);
   max-height: 78vh; overflow-y: auto;
@@ -323,7 +324,7 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 #notePassage { cursor: pointer; }
 
 #noteFoot {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 6px;
   padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
   border-top: 1px solid var(--line);
 }
@@ -337,6 +338,7 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
   background: var(--bg); color: var(--fg); outline: none;
   resize: none; overflow: hidden; line-height: 1.4; height: 38px;
   white-space: nowrap;
+  flex: 1 1 auto; min-width: 90px;
 }
 #noteTags:focus { border-color: var(--accent); }
 #noteToBible, #noteReturn {

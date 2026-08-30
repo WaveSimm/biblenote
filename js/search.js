@@ -213,7 +213,7 @@ function paintScope() {
     btn.classList.toggle("on", btn.dataset.scope === scope);
 }
 
-export function openFind(version) {
+export function openFind(version, opts = {}) {
   curVersion = version;
   $("findVer").textContent = versionMeta(version).name;
   paintScope();
@@ -227,7 +227,7 @@ export function openFind(version) {
     shownVersion = null;
   }
   $("findGo").disabled = !running && !$("findInput").value.trim();
-  setTab(tab);
+  setTab(opts.tab || tab);
   $("findInput").focus();
   $("findInput").select();
 }
