@@ -8,7 +8,7 @@ import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v29";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
+const APP_VERSION = "v30";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 

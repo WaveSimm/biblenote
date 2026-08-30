@@ -12,9 +12,20 @@ const $ = (id) => document.getElementById(id);
 let hooks = {};        // { onPick }
 
 const SERVICE = { 주일낮: "주일 낮", 주일밤: "주일 밤", 수요: "수요", 특별집회: "특별집회" };
-const MAX = 500;       // 한 번에 그리는 최대 개수 (294개가 다 보이도록)
 
-export function initNoteList(h) { hooks = h || {}; }
+// 한 번에 그리는 개수. 노트는 해마다 쌓이므로 상한을 두지 않고
+// 성경 본문처럼 스크롤이 끝에 닿으면 이어 붙인다.
+const PAGE = 80;
+
+let cur = { list: [], at: 0, month: null };
+
+export function initNoteList(h) {
+  hooks = h || {};
+  const box = $("noteResults");
+  box.addEventListener("scroll", () => {
+    if (box.scrollTop + box.clientHeight > box.scrollHeight - 400) renderMore();
+  }, { passive: true });
+}
 
 function row(n) {
   const b = document.createElement("button");
@@ -76,37 +87,43 @@ function firstLine(n) {
   return l ? l.trim().slice(0, 40) : "";
 }
 
+/** 다음 묶음을 이어 붙인다. 스크롤이 끝에 닿을 때마다 불린다. */
+function renderMore() {
+  if (cur.at >= cur.list.length) return;
+  const box = $("noteResults");
+  const end = Math.min(cur.at + PAGE, cur.list.length);
+  const frag = document.createDocumentFragment();
+  for (; cur.at < end; cur.at++) {
+    const n = cur.list[cur.at];
+    const m = n.date.slice(0, 7);
+    if (m !== cur.month) {            // 월 머리는 달이 바뀔 때만
+      cur.month = m;
+      const h = document.createElement("div");
+      h.className = "nl-month";
+      h.textContent = `${+m.slice(0, 4)}년 ${+m.slice(5)}월`;
+      frag.append(h);
+    }
+    frag.append(row(n));
+  }
+  box.append(frag);
+}
+
 export function renderNoteList(query = "") {
   const box = $("noteResults");
   box.replaceChildren();
 
   const q = query.trim();
-  const list = q ? Notes.search(q) : Notes.all().slice();
   // Notes.all() 은 이미 최근순이다. search() 결과도 같은 순서를 따른다.
+  cur = { list: q ? Notes.search(q) : Notes.all().slice(), at: 0, month: null };
 
   $("noteStatLine").textContent = Notes.all().length
-    ? (q ? `${list.length}개 찾음` : `노트 ${list.length}개`)
+    ? (q ? `${cur.list.length}개 찾음` : `노트 ${cur.list.length}개`)
     : "노트가 없습니다 — 설정에서 가져오거나 성경에서 새로 적으세요";
 
-  let month = null, added = 0;
-  for (const n of list) {
-    if (added >= MAX) break;
-    const m = n.date.slice(0, 7);
-    if (m !== month) {
-      month = m;
-      const h = document.createElement("div");
-      h.className = "nl-month";
-      h.textContent = `${+m.slice(0, 4)}년 ${+m.slice(5)}월`;
-      box.append(h);
-    }
-    box.append(row(n));
-    added++;
-  }
-  if (list.length > MAX) {
-    const more = document.createElement("div");
-    more.className = "nl-more";
-    more.textContent = `… 그 외 ${list.length - MAX}개. 검색어로 좁혀 보세요.`;
-    box.append(more);
-  }
   box.scrollTop = 0;
+  renderMore();
+  // 첫 묶음이 화면을 다 못 채우면 스크롤이 생기지 않아 더 불러올 기회가 없다
+  requestAnimationFrame(() => {
+    if (box.scrollHeight <= box.clientHeight) renderMore();
+  });
 }
