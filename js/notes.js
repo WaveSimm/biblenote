@@ -19,6 +19,17 @@ let byVerse = new Map();         // "b:c:v" -> Note[]
 const vkey = (b, c, v) => `${b}:${c}:${v}`;
 const uid = () => "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
+// 최근 날짜가 앞으로. 같은 날이면 나중에 만든 것이 앞.
+//
+// 같을 때 0 을 돌려주는 것이 중요하다. 전에는 `a.date < b.date ? 1 : -1` 이라
+// 같은 날짜에도 늘 -1 을 주어 두 원소를 바꿔 물어도 같은 답을 내놓았다.
+// 모순된 비교 함수라 정렬 결과가 그때그때 달라졌고, 같은 날 노트가 셋이 되자
+// 엉뚱한 자리로 밀려 목록(앞 200개)에서 사라지곤 했다.
+const byNewest = (a, b) => {
+  if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+  return (b.createdAt || 0) - (a.createdAt || 0);
+};
+
 /* ---------- 색인 ---------- */
 
 function indexNote(n) {
@@ -38,7 +49,7 @@ function reindex() {
   byVerse = new Map();
   for (const n of notes) { byId.set(n.id, n); indexNote(n); }
   // 각 절의 노트는 최근 것이 위로
-  for (const arr of byVerse.values()) arr.sort((a, b) => (a.date < b.date ? 1 : -1));
+  for (const arr of byVerse.values()) arr.sort(byNewest);
 }
 
 /* ---------- 읽기·쓰기 ---------- */
@@ -100,7 +111,7 @@ export function put(note) {
   if (!note.createdAt) note.createdAt = note.updatedAt;
   const i = notes.findIndex((x) => x.id === note.id);
   if (i >= 0) notes[i] = note; else notes.push(note);
-  notes.sort((a, b) => (a.date < b.date ? 1 : -1));
+  notes.sort(byNewest);
   reindex();
   persist();
   return note;
@@ -144,7 +155,7 @@ export function importNotes(arr, { imported = true } = {}) {
     byId.set(n.id, n);
     added++;
   }
-  notes.sort((a, b) => (a.date < b.date ? 1 : -1));
+  notes.sort(byNewest);
   reindex();
   persist();
   return added;

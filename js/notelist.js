@@ -12,7 +12,7 @@ const $ = (id) => document.getElementById(id);
 let hooks = {};        // { onPick }
 
 const SERVICE = { 주일낮: "주일 낮", 주일밤: "주일 밤", 수요: "수요", 특별집회: "특별집회" };
-const MAX = 200;       // 한 번에 그리는 최대 개수
+const MAX = 500;       // 한 번에 그리는 최대 개수 (294개가 다 보이도록)
 
 export function initNoteList(h) { hooks = h || {}; }
 
