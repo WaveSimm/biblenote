@@ -115,12 +115,13 @@ export function remove(id) {
   return true;
 }
 
-/** 제목·본문·설교자·시리즈에서 낱말 찾기 (모두 포함하는 것만) */
+/** 제목·본문·설교자·시리즈·태그에서 낱말 찾기 (모두 포함하는 것만) */
 export function search(query) {
   const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   if (!terms.length) return [];
   return notes.filter((n) => {
-    const hay = [n.title, n.body, n.preacher, n.series].join("\n").toLowerCase();
+    const hay = [n.title, n.body, n.preacher, n.series, (n.tags || []).join(" ")]
+      .join("\n").toLowerCase();
     return terms.every((t) => hay.includes(t));
   });
 }

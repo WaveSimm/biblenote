@@ -63,6 +63,17 @@ function noteCard(note, hit) {
   }
   box.append(body);
 
+  if (note.tags && note.tags.length) {
+    const tg = document.createElement("div");
+    tg.className = "tags";
+    for (const t of note.tags) {
+      const c = document.createElement("span");
+      c.textContent = t;
+      tg.append(c);
+    }
+    box.append(tg);
+  }
+
   const open = document.createElement("button");
   open.className = "vn-open";
   open.textContent = "노트 열기";

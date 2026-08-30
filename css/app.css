@@ -284,7 +284,7 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 #notePassage.empty { color: var(--muted); font-weight: 400; }
 #noteDate { font-size: 12px; color: var(--muted); white-space: nowrap; }
 
-#noteMeta { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+#noteMeta { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
 #noteMeta input {
   flex: 1; min-width: 0; font-size: 14px; padding: 8px 10px; font-family: inherit;
   border: 1px solid var(--line); border-radius: 9px;
@@ -292,6 +292,8 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 }
 #noteMeta input:focus { border-color: var(--accent); }
 #notePreacherIn { flex: 0 0 34%; }
+/* 태그는 한 줄을 통째로 — 설교 중간·끝에 떠오른 말을 적는 자리 */
+#noteTags { flex: 1 1 100%; }
 
 /* 편집기 — 투명 textarea 뒤에 색칠한 사본을 겹친다.
    두 층의 글꼴·크기·줄간격·여백·줄바꿈 규칙이 하나라도 다르면 글자가 어긋난다. */
@@ -434,3 +436,10 @@ span.v.draft > .vh { color: var(--accent); font-weight: 600; }
 }
 .nl-preacher { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; text-align: right; }
 .nl-more { font-size: 12px; color: var(--muted); padding: 12px 2px; text-align: center; }
+
+/* 태그 표시 — 목록과 절 노트에서 */
+.tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.tags span {
+  font-size: 11px; color: var(--accent); background: var(--chip-bg);
+  border-radius: 999px; padding: 2px 8px;
+}

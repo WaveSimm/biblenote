@@ -53,9 +53,22 @@ function row(n) {
     main.append(p);
   }
 
+  if (n.tags && n.tags.length) main.append(tagChips(n.tags));
+
   b.append(day, main);
   b.onclick = () => hooks.onPick && hooks.onPick(n.id);
   return b;
+}
+
+function tagChips(tags) {
+  const box = document.createElement("span");
+  box.className = "tags";
+  for (const t of tags) {
+    const s = document.createElement("span");
+    s.textContent = t;
+    box.append(s);
+  }
+  return box;
 }
 
 function firstLine(n) {

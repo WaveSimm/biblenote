@@ -68,6 +68,7 @@ function save() {
   note.body = $("noteText").value;
   note.title = $("noteTitle").value.trim() || undefined;
   note.preacher = $("notePreacherIn").value.trim() || undefined;
+  note.tags = parseTags($("noteTags").value);
   if (!note.body.trim() && !note.title) {
     // 새 노트라면 만들지 않는다. 그런데 있던 노트를 비운 것이라면 지워야 한다 —
     // 그냥 돌아가면 저장소에 옛 내용이 남아 절 표시도 그대로 남는다.
@@ -105,7 +106,7 @@ export function initNoteEdit(h) {
     const a = anchors.find((x) => at >= x.start && at < x.end);
     if (a) gotoAnchor(a);
   });
-  for (const id of ["noteTitle", "notePreacherIn"]) $(id).addEventListener("input", schedSave);
+  for (const id of ["noteTitle", "notePreacherIn", "noteTags"]) $(id).addEventListener("input", schedSave);
 
   $("noteBack").onclick = closeNote;
   $("notePassage").onclick = () => { if (anchors[0]) gotoAnchor(anchors[0]); };
@@ -137,8 +138,10 @@ export function openNote({ id = null, ref = null, label = "" } = {}) {
   $("noteText").value = note.body || "";
   $("noteTitle").value = note.title || "";
   $("notePreacherIn").value = note.preacher || "";
+  $("noteTags").value = (note.tags || []).join(", ");
   $("noteDate").textContent = `${note.date} (${note.weekday})`;
   fillPreachers();
+  fillTags();
 
   $("noteView").hidden = false;
   document.body.classList.add("noting");
@@ -203,6 +206,30 @@ function toNote() {
   onBible = false;
   const ta = $("noteText");
   ta.focus();                      // 커서 자리는 브라우저가 지켜 준다
+}
+
+/* ---------- 태그 ---------- */
+
+// 쉼표로 나눈다. 낱말 사이 공백을 살려야 '하나님의 은혜' 같은 태그가 쪼개지지 않는다.
+function parseTags(v) {
+  const out = [];
+  for (const t of String(v || "").split(",")) {
+    const s = t.trim();
+    if (s && !out.includes(s)) out.push(s);
+  }
+  return out.length ? out : undefined;
+}
+
+function fillTags() {
+  const c = new Map();
+  for (const n of Notes.all()) for (const t of n.tags || []) c.set(t, (c.get(t) || 0) + 1);
+  const dl = $("tagList");
+  dl.replaceChildren();
+  for (const [t] of [...c.entries()].sort((a, b) => b[1] - a[1]).slice(0, 60)) {
+    const o = document.createElement("option");
+    o.value = t;
+    dl.append(o);
+  }
 }
 
 /* ---------- 설교자 자동완성 ---------- */
