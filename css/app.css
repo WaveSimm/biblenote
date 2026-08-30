@@ -266,7 +266,12 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 /* ================= 설교노트 ================= */
 
 #noteView {
-  position: fixed; inset: 0; z-index: 70;
+  /* 키보드가 올라오면 실제 보이는 높이(--vvh)로 줄인다.
+     안드로이드 크롬은 기본적으로 키보드가 화면을 덮되 레이아웃은 그대로 두어,
+     전체 화면인 이 패널이 키보드 밑으로 뻗어 아래 줄과 버튼이 가려졌다. */
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--vvh, 100%);
+  z-index: 70;
   display: flex; flex-direction: column;
   background: var(--bg); color: var(--fg);
 }

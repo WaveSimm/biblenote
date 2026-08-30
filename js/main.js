@@ -8,7 +8,7 @@ import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v23";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
+const APP_VERSION = "v24";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -338,6 +338,14 @@ function schedSavePos() {
   }, 800);
 }
 
+// 키보드가 가리고 남은 실제 높이. 뷰포트 meta 로 해결되는 브라우저에서는
+// 이 값이 창 높이와 같아 아무 일도 하지 않는다.
+function syncViewportHeight() {
+  const vv = visualViewport;
+  const h = vv ? vv.height : innerHeight;
+  document.documentElement.style.setProperty("--vvh", h + "px");
+}
+
 // 상·하단 바의 실제 높이를 본문 여백(--topbar-h/--bottombar-h)과 기준선에 반영
 function syncBarMetrics() {
   const th = $("topbar").offsetHeight;
@@ -638,6 +646,13 @@ async function main() {
     openNote: (o) => openNote(o),
   });
   initNotesIO({ onImported: remarkAllNoted });
+
+  syncViewportHeight();
+  if (window.visualViewport) {
+    visualViewport.addEventListener("resize", syncViewportHeight);
+    visualViewport.addEventListener("scroll", syncViewportHeight);
+  }
+  addEventListener("resize", syncViewportHeight);
 
   paneA = new Pane($("paneA"), settings.verA);
   paneB = new Pane($("paneB"), settings.verB);
