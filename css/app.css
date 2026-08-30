@@ -296,9 +296,7 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
   background: var(--bg); color: var(--fg); outline: none;
 }
 #noteMeta input:focus { border-color: var(--accent); }
-#notePreacherIn { flex: 0 0 34%; }
-/* 태그는 한 줄을 통째로 — 설교 중간·끝에 떠오른 말을 적는 자리 */
-#noteTags { flex: 1 1 100%; }
+#notePreacherIn { flex: 0 0 40%; }
 
 /* 편집기 — 투명 textarea 뒤에 색칠한 사본을 겹친다.
    두 층의 글꼴·크기·줄간격·여백·줄바꿈 규칙이 하나라도 다르면 글자가 어긋난다. */
@@ -329,7 +327,13 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
   padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
   border-top: 1px solid var(--line);
 }
-#noteStat { flex: 1; font-size: 12px; color: var(--muted); }
+/* 태그는 키보드 바로 위 — 설교 끝 무렵에 떠오른 말을 적는 자리 */
+#noteTags {
+  flex: 1; min-width: 0; font-size: 14px; padding: 9px 12px; font-family: inherit;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--bg); color: var(--fg); outline: none;
+}
+#noteTags:focus { border-color: var(--accent); }
 #noteToBible, #noteReturn {
   border: 1px solid var(--line); background: var(--chip-bg); color: var(--fg);
   border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 600;

@@ -47,10 +47,6 @@ function paint() {
   const first = anchors[0];
   $("notePassage").textContent = first ? first.label : "본문 없음";
   $("notePassage").classList.toggle("empty", !first);
-  $("noteStat").textContent = anchors.length
-    ? `절 ${anchors.length}곳`
-    : "본문을 적으면 절이 인식됩니다";
-
   if (hooks.markDraft) hooks.markDraft(anchors);
 }
 
