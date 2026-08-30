@@ -327,11 +327,16 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
   padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
   border-top: 1px solid var(--line);
 }
-/* 태그는 키보드 바로 위 — 설교 끝 무렵에 떠오른 말을 적는 자리 */
+/* 태그는 키보드 바로 위 — 설교 끝 무렵에 떠오른 말을 적는 자리.
+   input 이 아니라 textarea 인 이유: 안드로이드가 input 에 포커스가 가면
+   자동완성 막대(비밀번호·카드·주소)를 키보드 위에 띄워 두 줄을 잡아먹는다.
+   autocomplete="off" 로는 막히지 않는다. textarea 에는 뜨지 않는다. */
 #noteTags {
   flex: 1; min-width: 0; font-size: 14px; padding: 9px 12px; font-family: inherit;
   border: 1px solid var(--line); border-radius: 999px;
   background: var(--bg); color: var(--fg); outline: none;
+  resize: none; overflow: hidden; line-height: 1.4; height: 38px;
+  white-space: nowrap;
 }
 #noteTags:focus { border-color: var(--accent); }
 #noteToBible, #noteReturn {

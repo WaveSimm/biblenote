@@ -103,6 +103,10 @@ export function initNoteEdit(h) {
     if (a) gotoAnchor(a);
   });
   for (const id of ["noteTitle", "notePreacherIn", "noteTags"]) $(id).addEventListener("input", schedSave);
+  // 한 줄로 쓰는 칸이라 줄바꿈은 받지 않는다 (Enter 는 키보드를 내린다)
+  $("noteTags").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); e.target.blur(); }
+  });
 
   $("noteBack").onclick = closeNote;
   $("notePassage").onclick = () => { if (anchors[0]) gotoAnchor(anchors[0]); };
@@ -137,7 +141,6 @@ export function openNote({ id = null, ref = null, label = "" } = {}) {
   $("noteTags").value = (note.tags || []).join(", ");
   $("noteDate").textContent = `${note.date} (${note.weekday})`;
   fillPreachers();
-  fillTags();
 
   $("noteView").hidden = false;
   document.body.classList.add("noting");
@@ -209,23 +212,12 @@ function toNote() {
 // 쉼표로 나눈다. 낱말 사이 공백을 살려야 '하나님의 은혜' 같은 태그가 쪼개지지 않는다.
 function parseTags(v) {
   const out = [];
-  for (const t of String(v || "").split(",")) {
+  for (const t of String(v || "").split(/[,
+]/)) {
     const s = t.trim();
     if (s && !out.includes(s)) out.push(s);
   }
   return out.length ? out : undefined;
-}
-
-function fillTags() {
-  const c = new Map();
-  for (const n of Notes.all()) for (const t of n.tags || []) c.set(t, (c.get(t) || 0) + 1);
-  const dl = $("tagList");
-  dl.replaceChildren();
-  for (const [t] of [...c.entries()].sort((a, b) => b[1] - a[1]).slice(0, 60)) {
-    const o = document.createElement("option");
-    o.value = t;
-    dl.append(o);
-  }
 }
 
 /* ---------- 설교자 자동완성 ---------- */
