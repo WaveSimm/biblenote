@@ -212,8 +212,7 @@ function toNote() {
 // 쉼표로 나눈다. 낱말 사이 공백을 살려야 '하나님의 은혜' 같은 태그가 쪼개지지 않는다.
 function parseTags(v) {
   const out = [];
-  for (const t of String(v || "").split(/[,
-]/)) {
+  for (const t of String(v || "").split(/[,\n]/)) {
     const s = t.trim();
     if (s && !out.includes(s)) out.push(s);
   }
