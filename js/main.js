@@ -442,14 +442,22 @@ function toast(msg, ms = 2000) {
 // 안드로이드에서 뒤로가기를 누르면 앱이 그대로 닫혔다. 읽던 자리는 저장되지만
 // 시트를 열어 둔 채로 눌러도 닫혀 버려서, 노트를 쓰다 실수로 나가기 쉬웠다.
 //
-// 방법: 시작할 때 히스토리에 지킴목을 하나 세워 둔다. 뒤로가기는 그 지킴목을
-// 무너뜨리고 popstate 를 부르므로, 우리가 대신 "열려 있는 것 하나"를 닫고
-// 지킴목을 다시 세운다. 더 닫을 게 없으면 알림만 띄우고 지킴목을 세우지 '않는다' —
+// 방법: 히스토리에 지킴목을 하나 세워 둔다. 뒤로가기는 그 지킴목을 무너뜨리고
+// popstate 를 부르므로, 우리가 대신 "열려 있는 것 하나"를 닫고 지킴목을 다시
+// 세운다. 더 닫을 게 없으면 알림만 띄우고 지킴목을 세우지 '않는다' —
 // 히스토리가 비었으니 다음 한 번에 OS 가 앱을 닫는다.
+//
+// 지킴목은 반드시 '사용자가 화면을 한 번 만진 뒤에' 세운다. 크롬은 사용자
+// 조작 없이 쌓은 히스토리 항목을 뒤로가기에서 그냥 건너뛴다 (히스토리를 채워
+// 못 나가게 하는 페이지를 막는 장치다). 시작하자마자 세웠더니 읽기 화면에서는
+// 지킴목이 통째로 무시되어 앱이 그대로 닫혔다 — 메뉴를 한 번 열었다 나온
+// 뒤에만 알림이 뜨던 이유다.
 
 const GUARD = { biblenote: "back" };
 let exitArmed = false;
 let exitTimer = null;
+
+const hasGuard = () => !!(history.state && history.state.biblenote);
 
 /** 열려 있는 것을 위에서부터 하나 닫는다. 닫았으면 true */
 function backStep() {
@@ -460,25 +468,24 @@ function backStep() {
   return false;
 }
 
-function disarmExit() {
-  if (!exitArmed) return;
+// 화면을 만질 때마다 부른다. 아직 지킴목이 없으면 세우고(첫 조작),
+// 종료를 기다리던 중이면 그 대기를 풀고 다시 세운다 — 마음을 바꾼 것이니까.
+function touchGuard() {
   exitArmed = false;
   clearTimeout(exitTimer);
-  history.pushState(GUARD, "");        // 지킴목을 다시 세운다
+  if (!hasGuard()) history.pushState(GUARD, "");
 }
 
 function initBackGuard() {
-  history.pushState(GUARD, "");
   addEventListener("popstate", () => {
     if (backStep()) { history.pushState(GUARD, ""); return; }
     if (exitArmed) return;             // 두 번째 — 막지 않는다 (앱이 닫힌다)
     exitArmed = true;
     toast("한 번 더 누르면 앱이 닫힙니다");
-    exitTimer = setTimeout(disarmExit, 2000);
+    exitTimer = setTimeout(() => { exitArmed = false; touchGuard(); }, 2000);
   });
-  // 뒤로가기를 눌렀다가 마음을 바꿔 화면을 만지면 곧바로 지킴목을 되세운다.
-  // 안 그러면 그 2초 동안은 뒤로가기 한 번에 바로 닫힌다.
-  addEventListener("pointerdown", disarmExit, { capture: true, passive: true });
+  for (const ev of ["pointerdown", "keydown"])
+    addEventListener(ev, touchGuard, { capture: true, passive: true });
 }
 
 function openVerPop(slot, anchor) {
@@ -677,6 +684,7 @@ async function setCompare(on) {
 
 /* ================= 초기화 ================= */
 async function main() {
+  initBackGuard();          // 첫 터치를 놓치지 않게 데이터를 읽기 전에 건다
   await initData();
   buildAliases(BOOKS);
   settings = loadSettings();
@@ -761,8 +769,6 @@ async function main() {
       if (settings.mode === "compare") paneB.scrollToVerse(curRef.b, curRef.c, curRef.v);
     }, 250);
   });
-
-  initBackGuard();
 
   // 마지막 위치 복원
   await jumpTo(curRef, { push: false });
