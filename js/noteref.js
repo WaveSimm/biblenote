@@ -41,7 +41,13 @@ export function buildNoteRefs(books) {
   for (const [k, v] of Object.entries(ALIAS)) if (!map.has(k)) map.set(k, v);
 
   NAMES = [...map.entries()].sort((a, b) => b[0].length - a[0].length);
-  const alt = NAMES.map(([n]) => esc(n)).join("|");
+  // 숫자로 끝나는 약어(요1·고2…)는 뒤에 공백이 있어야 인정한다.
+  // 실제 노트가 그렇게 갈라 쓴다 — '요1 4:17' 은 요한일서 4:17 이지만
+  // '요14:17' 은 요한복음 14:17 이다. 공백을 안 보면 '요21장 모닥불 …'(요한복음)
+  // 같은 줄이 요한이서로 넘어간다.
+  const numd = NAMES.filter(([n]) => /\d$/.test(n)).map(([n]) => esc(n)).join("|");
+  const plain = NAMES.filter(([n]) => !/\d$/.test(n)).map(([n]) => esc(n)).join("|");
+  const alt = `(?:${numd})(?=\\s)|(?:${plain})`;
   // 책 + 장:절[-절].  구분자는 : ; ： 또는 '장'
   RE_EXPLICIT = new RegExp(`(?<![가-힣])(${alt})\\s*(\\d{1,3})\\s*[:;：장]\\s*(\\d{1,3})(?:\\s*[-~]\\s*(\\d{1,3}))?`);
   // 절 없이 장만 — '계18', '렘17장'
