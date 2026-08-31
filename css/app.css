@@ -166,6 +166,22 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 /* ---- sheets ---- */
 /* 시트는 노트 화면(z-index 70) 위로 와야 한다 — 노트를 쓰다가 목록을 열 수 있게 */
 #backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 80; }
+
+/* 잠깐 뜨는 알림 — 시트(90)와 노트(70) 위에 떠야 어디서 눌러도 보인다 */
+#toast {
+  position: fixed; z-index: 200;
+  left: 50%; transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom) + var(--bottombar-h, 56px) + 20px);
+  /* left:50% 만 주면 오른쪽 절반 너비에 맞춰 줄이 접힌다 */
+  width: max-content; max-width: calc(100% - 40px);
+  background: rgba(24,24,27,.94); color: #fff;
+  border: 1px solid rgba(255,255,255,.14);   /* 어두운 배경에서도 경계가 보이게 */
+  font-size: 14px; line-height: 1.4; text-align: center;
+  padding: 11px 18px; border-radius: 999px;
+  box-shadow: 0 6px 22px rgba(0,0,0,.32);
+  pointer-events: none;                 /* 아래 단추를 가리지 않는다 */
+}
+#toast[hidden] { display: none; }
 .sheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
   background: var(--sheet-bg); border-radius: 18px 18px 0 0;

@@ -419,10 +419,66 @@ function markDraft(anchors) {
 }
 
 /* ================= 시트/팝오버 ================= */
+const SHEETS = ["sheetSearch", "sheetFind", "sheetVerse", "sheetSettings", "verPop"];
 function openSheet(el) { closeAll(); $("backdrop").hidden = false; el.hidden = false; }
 function closeAll() {
-  for (const id of ["sheetSearch", "sheetFind", "sheetVerse", "sheetSettings", "verPop"]) $(id).hidden = true;
+  for (const id of SHEETS) $(id).hidden = true;
   $("backdrop").hidden = true;
+}
+
+/* ================= 잠깐 뜨는 알림 ================= */
+
+let toastTimer = null;
+function toast(msg, ms = 2000) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, ms);
+}
+
+/* ================= 뒤로가기 ================= */
+//
+// 안드로이드에서 뒤로가기를 누르면 앱이 그대로 닫혔다. 읽던 자리는 저장되지만
+// 시트를 열어 둔 채로 눌러도 닫혀 버려서, 노트를 쓰다 실수로 나가기 쉬웠다.
+//
+// 방법: 시작할 때 히스토리에 지킴목을 하나 세워 둔다. 뒤로가기는 그 지킴목을
+// 무너뜨리고 popstate 를 부르므로, 우리가 대신 "열려 있는 것 하나"를 닫고
+// 지킴목을 다시 세운다. 더 닫을 게 없으면 알림만 띄우고 지킴목을 세우지 '않는다' —
+// 히스토리가 비었으니 다음 한 번에 OS 가 앱을 닫는다.
+
+const GUARD = { biblenote: "back" };
+let exitArmed = false;
+let exitTimer = null;
+
+/** 열려 있는 것을 위에서부터 하나 닫는다. 닫았으면 true */
+function backStep() {
+  if (SHEETS.some((id) => !$(id).hidden)) { closeAll(); return true; }
+  // 노트를 쓰다 성경 쪽을 보는 중이면 먼저 노트로 되돌린다
+  if (!$("noteReturn").hidden) { $("noteReturn").click(); return true; }
+  if (!$("noteView").hidden) { $("noteBack").click(); return true; }
+  return false;
+}
+
+function disarmExit() {
+  if (!exitArmed) return;
+  exitArmed = false;
+  clearTimeout(exitTimer);
+  history.pushState(GUARD, "");        // 지킴목을 다시 세운다
+}
+
+function initBackGuard() {
+  history.pushState(GUARD, "");
+  addEventListener("popstate", () => {
+    if (backStep()) { history.pushState(GUARD, ""); return; }
+    if (exitArmed) return;             // 두 번째 — 막지 않는다 (앱이 닫힌다)
+    exitArmed = true;
+    toast("한 번 더 누르면 앱이 닫힙니다");
+    exitTimer = setTimeout(disarmExit, 2000);
+  });
+  // 뒤로가기를 눌렀다가 마음을 바꿔 화면을 만지면 곧바로 지킴목을 되세운다.
+  // 안 그러면 그 2초 동안은 뒤로가기 한 번에 바로 닫힌다.
+  addEventListener("pointerdown", disarmExit, { capture: true, passive: true });
 }
 
 function openVerPop(slot, anchor) {
@@ -705,6 +761,8 @@ async function main() {
       if (settings.mode === "compare") paneB.scrollToVerse(curRef.b, curRef.c, curRef.v);
     }, 250);
   });
+
+  initBackGuard();
 
   // 마지막 위치 복원
   await jumpTo(curRef, { push: false });
