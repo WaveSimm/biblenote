@@ -8,7 +8,7 @@ import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v34";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v35";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -442,10 +442,9 @@ function toast(msg, ms = 2000) {
 // 안드로이드에서 뒤로가기를 누르면 앱이 그대로 닫혔다. 읽던 자리는 저장되지만
 // 시트를 열어 둔 채로 눌러도 닫혀 버려서, 노트를 쓰다 실수로 나가기 쉬웠다.
 //
-// 방법: 히스토리에 지킴목을 하나 세워 둔다. 뒤로가기는 그 지킴목을 무너뜨리고
-// popstate 를 부르므로, 우리가 대신 "열려 있는 것 하나"를 닫고 지킴목을 다시
-// 세운다. 더 닫을 게 없으면 알림만 띄우고 지킴목을 세우지 '않는다' —
-// 히스토리가 비었으니 다음 한 번에 OS 가 앱을 닫는다.
+// 방법: 히스토리에 지킴목을 쌓아 둔다. 뒤로가기는 지킴목을 하나 무너뜨리고
+// popstate 를 부르므로, 우리가 대신 "열려 있는 것 하나"를 닫는다. 더 닫을 게
+// 없으면 알림만 띄운다. 남은 지킴목이 없으니 다음 한 번에 OS 가 앱을 닫는다.
 //
 // 언제 세우느냐가 까다롭다. 크롬은 '조작된 적 없는 문서' 가 쌓은 히스토리
 // 항목을 뒤로가기에서 건너뛴다 (히스토리를 채워 못 나가게 하는 페이지를 막는
@@ -456,23 +455,42 @@ function toast(msg, ms = 2000) {
 //   ① 시작하자마자 세움        → 읽기 화면에서 바로 닫힘
 //   ② pointerdown 에서 세움    → 조금만 스크롤해도 바로 닫힘.
 //      터치는 손을 내려놓는 순간에는 아직 '조작' 으로 확정되지 않는다.
+//   ③ popstate 안에서 다시 세움 → 노트를 뒤로가기로 닫은 다음 한 번 더 누르면
+//      바로 닫힘. 뒤로가기로 이동한 것은 '조작' 이 아니다.
 //
-// 그래서 손을 뗀 뒤(pointerup·touchend·click·keydown)에, 문서가 실제로
-// 조작된 적이 있는지(navigator.userActivation.hasBeenActive) 확인하고 세운다.
+// 그래서 지킴목은 오직 '손을 뗀 순간'(pointerup·touchend·click·keydown)에만
+// 세운다. ③ 때문에 하나만 세워서는 안 된다 — 뒤로가기로 겹을 닫고 나면 다시
+// 세울 기회가 없으니, 열려 있는 겹 수 + 1 만큼 미리 쌓아 둔다.
 //
 // 한 번도 만지지 않고 누른 뒤로가기는 막을 수 없다 — 브라우저가 정한 선이다.
 // 대신 그때는 아직 한 일이 없으니 잃을 것도 없다.
 
 const GUARD = { biblenote: "back" };
+let guards = 0;            // 지금 쌓여 있는 지킴목 수
+let skipPops = 0;          // 우리가 스스로 되감은 것 — popstate 를 무시할 횟수
 let exitArmed = false;
-let exitTimer = null;
 
-const hasGuard = () => !!(history.state && history.state.biblenote);
 const activated = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
 
-/** 조작이 확인된 뒤에만 지킴목을 세운다 */
-function ensureGuard() {
-  if (!hasGuard() && activated()) history.pushState(GUARD, "");
+/** 뒤로가기로 닫을 수 있는 겹의 수 */
+function layers() {
+  let n = SHEETS.some((id) => !$(id).hidden) ? 1 : 0;
+  if (!$("noteReturn").hidden) n += 2;        // 성경 보는 중 → 노트로, 그다음 노트 닫기
+  else if (!$("noteView").hidden) n += 1;
+  return n;
+}
+
+/** 겹 수 + 1(종료 확인용) 만큼 지킴목을 맞춘다. 반드시 조작 중에만 부른다. */
+function syncGuards() {
+  if (!activated() || skipPops) return;
+  const want = layers() + 1;
+  while (guards < want) { history.pushState(GUARD, ""); guards++; }
+  if (guards > want) {                        // ✕ 로 닫아 남은 것은 조용히 걷어낸다
+    const k = guards - want;
+    guards = want;
+    skipPops++;                               // go(-k) 는 popstate 를 한 번만 부른다
+    history.go(-k);
+  }
 }
 
 /** 열려 있는 것을 위에서부터 하나 닫는다. 닫았으면 true */
@@ -484,26 +502,22 @@ function backStep() {
   return false;
 }
 
-// 손을 뗀 뒤에 부른다. 아직 지킴목이 없으면 세우고(첫 조작), 종료를 기다리던
-// 중이면 그 대기를 풀고 다시 세운다 — 마음을 바꾼 것이니까.
-function onGesture() {
-  exitArmed = false;
-  clearTimeout(exitTimer);
-  ensureGuard();
-}
-
 function initBackGuard() {
   addEventListener("popstate", () => {
-    if (backStep()) { ensureGuard(); return; }
-    if (exitArmed) return;             // 두 번째 — 막지 않는다 (앱이 닫힌다)
+    if (skipPops) { skipPops--; return; }     // 우리가 걷어낸 것
+    if (guards > 0) guards--;
+    if (backStep()) return;                   // 겹 하나를 닫았다. 지킴목은 이미 아래에 있다
+    if (exitArmed) return;                    // 두 번째 — 막지 않는다 (앱이 닫힌다)
     exitArmed = true;
     toast("한 번 더 누르면 앱이 닫힙니다");
-    exitTimer = setTimeout(() => { exitArmed = false; ensureGuard(); }, 2000);
   });
-  // pointerdown 은 일부러 뺐다 — 터치 스크롤이 그 시점에는 조작으로 안 잡혀서,
-  // 거기서 세우면 오히려 지킴목이 통째로 무효가 된다 (위 주석 ②).
+
+  // 손을 뗀 뒤에, 그리고 그 조작의 결과(시트가 열렸는지 등)가 반영된 뒤에 맞춘다.
+  // 그래서 capture 가 아니라 버블 단계다 — capture 로 달았더니 시트가 열리기 전
+  // 상태를 보고 겹을 못 세어, 두 번째 뒤로가기가 그냥 앱을 닫았다.
+  const onGesture = () => { exitArmed = false; syncGuards(); };
   for (const ev of ["pointerup", "touchend", "click", "keydown"])
-    addEventListener(ev, onGesture, { capture: true, passive: true });
+    addEventListener(ev, onGesture, { passive: true });
 }
 
 function openVerPop(slot, anchor) {
