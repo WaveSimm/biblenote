@@ -8,7 +8,7 @@ import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v30";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다
+const APP_VERSION = "v34";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -447,17 +447,33 @@ function toast(msg, ms = 2000) {
 // 세운다. 더 닫을 게 없으면 알림만 띄우고 지킴목을 세우지 '않는다' —
 // 히스토리가 비었으니 다음 한 번에 OS 가 앱을 닫는다.
 //
-// 지킴목은 반드시 '사용자가 화면을 한 번 만진 뒤에' 세운다. 크롬은 사용자
-// 조작 없이 쌓은 히스토리 항목을 뒤로가기에서 그냥 건너뛴다 (히스토리를 채워
-// 못 나가게 하는 페이지를 막는 장치다). 시작하자마자 세웠더니 읽기 화면에서는
-// 지킴목이 통째로 무시되어 앱이 그대로 닫혔다 — 메뉴를 한 번 열었다 나온
-// 뒤에만 알림이 뜨던 이유다.
+// 언제 세우느냐가 까다롭다. 크롬은 '조작된 적 없는 문서' 가 쌓은 히스토리
+// 항목을 뒤로가기에서 건너뛴다 (히스토리를 채워 못 나가게 하는 페이지를 막는
+// 장치다). 그런데 건너뛸 것으로 표시되는 건 새로 쌓은 항목이 아니라 그 앞에
+// 있던 항목이라, 조작 없이 한 번이라도 세우면 그 뒤로 뭘 해도 뒤로가기가
+// 앱을 그대로 닫는다. 두 번 데었다:
+//
+//   ① 시작하자마자 세움        → 읽기 화면에서 바로 닫힘
+//   ② pointerdown 에서 세움    → 조금만 스크롤해도 바로 닫힘.
+//      터치는 손을 내려놓는 순간에는 아직 '조작' 으로 확정되지 않는다.
+//
+// 그래서 손을 뗀 뒤(pointerup·touchend·click·keydown)에, 문서가 실제로
+// 조작된 적이 있는지(navigator.userActivation.hasBeenActive) 확인하고 세운다.
+//
+// 한 번도 만지지 않고 누른 뒤로가기는 막을 수 없다 — 브라우저가 정한 선이다.
+// 대신 그때는 아직 한 일이 없으니 잃을 것도 없다.
 
 const GUARD = { biblenote: "back" };
 let exitArmed = false;
 let exitTimer = null;
 
 const hasGuard = () => !!(history.state && history.state.biblenote);
+const activated = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
+
+/** 조작이 확인된 뒤에만 지킴목을 세운다 */
+function ensureGuard() {
+  if (!hasGuard() && activated()) history.pushState(GUARD, "");
+}
 
 /** 열려 있는 것을 위에서부터 하나 닫는다. 닫았으면 true */
 function backStep() {
@@ -468,24 +484,26 @@ function backStep() {
   return false;
 }
 
-// 화면을 만질 때마다 부른다. 아직 지킴목이 없으면 세우고(첫 조작),
-// 종료를 기다리던 중이면 그 대기를 풀고 다시 세운다 — 마음을 바꾼 것이니까.
-function touchGuard() {
+// 손을 뗀 뒤에 부른다. 아직 지킴목이 없으면 세우고(첫 조작), 종료를 기다리던
+// 중이면 그 대기를 풀고 다시 세운다 — 마음을 바꾼 것이니까.
+function onGesture() {
   exitArmed = false;
   clearTimeout(exitTimer);
-  if (!hasGuard()) history.pushState(GUARD, "");
+  ensureGuard();
 }
 
 function initBackGuard() {
   addEventListener("popstate", () => {
-    if (backStep()) { history.pushState(GUARD, ""); return; }
+    if (backStep()) { ensureGuard(); return; }
     if (exitArmed) return;             // 두 번째 — 막지 않는다 (앱이 닫힌다)
     exitArmed = true;
     toast("한 번 더 누르면 앱이 닫힙니다");
-    exitTimer = setTimeout(() => { exitArmed = false; touchGuard(); }, 2000);
+    exitTimer = setTimeout(() => { exitArmed = false; ensureGuard(); }, 2000);
   });
-  for (const ev of ["pointerdown", "keydown"])
-    addEventListener(ev, touchGuard, { capture: true, passive: true });
+  // pointerdown 은 일부러 뺐다 — 터치 스크롤이 그 시점에는 조작으로 안 잡혀서,
+  // 거기서 세우면 오히려 지킴목이 통째로 무효가 된다 (위 주석 ②).
+  for (const ev of ["pointerup", "touchend", "click", "keydown"])
+    addEventListener(ev, onGesture, { capture: true, passive: true });
 }
 
 function openVerPop(slot, anchor) {
