@@ -8,7 +8,7 @@ import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v35";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v36";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -469,6 +469,7 @@ const GUARD = { biblenote: "back" };
 let guards = 0;            // 지금 쌓여 있는 지킴목 수
 let skipPops = 0;          // 우리가 스스로 되감은 것 — popstate 를 무시할 횟수
 let exitArmed = false;
+let sawInput = false;      // 손가락이 화면에 닿은 적이 있는가 (세우지는 않는다)
 
 const activated = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
 
@@ -480,9 +481,11 @@ function layers() {
   return n;
 }
 
-/** 겹 수 + 1(종료 확인용) 만큼 지킴목을 맞춘다. 반드시 조작 중에만 부른다. */
-function syncGuards() {
+/** 겹 수 + 1(종료 확인용) 만큼 지킴목을 맞춘다. 반드시 조작 중에만 부른다.
+ *  live: 조작이 아직 살아 있을 때만 (스크롤 중 재시도용 — 아래 설명) */
+function syncGuards({ live = false } = {}) {
   if (!activated() || skipPops) return;
+  if (live && navigator.userActivation && !navigator.userActivation.isActive) return;
   const want = layers() + 1;
   while (guards < want) { history.pushState(GUARD, ""); guards++; }
   if (guards > want) {                        // ✕ 로 닫아 남은 것은 조용히 걷어낸다
@@ -518,6 +521,19 @@ function initBackGuard() {
   const onGesture = () => { exitArmed = false; syncGuards(); };
   for (const ev of ["pointerup", "touchend", "click", "keydown"])
     addEventListener(ev, onGesture, { passive: true });
+
+  // 손을 안 떼고 길게 끌어 읽으면 그 제스처에 touchend 가 한 번뿐이라, 그때
+  // 아직 조작으로 안 잡혀 있으면 기회를 통째로 놓친다 (뒤로 길게 끌 때 그랬다).
+  // 그래서 지킴목이 하나도 없는 동안에는 스크롤할 때마다 다시 시도한다.
+  //
+  // 단, 손가락이 닿은 적이 있을 때만 — 시작할 때 마지막 위치로 옮기는 것도
+  // 스크롤이라, 이 조건이 없으면 조작 없이 세워 버려 오히려 무효가 된다.
+  // 조작이 아직 살아 있는 동안에만 세우는 것도 같은 이유다.
+  for (const ev of ["pointerdown", "touchstart"])
+    addEventListener(ev, () => { sawInput = true; }, { passive: true });
+  addEventListener("scroll", () => {
+    if (sawInput && guards === 0) syncGuards({ live: true });
+  }, { capture: true, passive: true });
 }
 
 function openVerPop(slot, anchor) {
