@@ -15,6 +15,7 @@ const WD = ["일", "월", "화", "수", "목", "금", "토"];
 let hooks = {};          // { jumpBible, markDraft, showBible, showNote }
 let note = null;         // 지금 편집 중인 노트
 let anchors = [];
+let seedBody = "";      // 새 노트에 미리 넣어 준 본문 라벨 (사용자가 쓴 것이 아니다)
 let saveTimer = null;
 let onBible = false;     // 성경 쪽을 보고 있는가
 
@@ -59,13 +60,27 @@ function schedSave() {
   saveTimer = setTimeout(save, 700);
 }
 
+// 사용자가 실제로 쓴 것이 있는가.
+//
+// 새 노트에는 본문 라벨('창1:1 ')을 미리 넣어 준다. 예전에는 이것을 내용으로
+// 세는 바람에 노트 아이콘을 눌렀다 그냥 닫기만 해도 노트가 하나씩 저장됐고,
+// 앵커까지 잡혀 성경 본문의 그 절이 노트 있는 절로 물들었다.
+// 그래서 '우리가 미리 넣어 준 만큼' 은 빼고 센다. 기존 노트를 열었을 때는
+// 미리 넣은 것이 없으므로(seedBody = "") 예전과 똑같이 동작한다.
+// 라벨 자체를 고쳐 쓴 경우(창1:1 → 롬8:28)는 앞부분이 달라지므로 내용으로 친다.
+function hasContent() {
+  const body = $("noteText").value;
+  const rest = body.startsWith(seedBody) ? body.slice(seedBody.length) : body;
+  return !!(rest.trim() || $("noteTitle").value.trim() || $("noteTags").value.trim());
+}
+
 function save() {
   if (!note) return;
   note.body = $("noteText").value;
   note.title = $("noteTitle").value.trim() || undefined;
   note.preacher = $("notePreacherIn").value.trim() || undefined;
   note.tags = parseTags($("noteTags").value);
-  if (!note.body.trim() && !note.title) {
+  if (!hasContent()) {
     // 새 노트라면 만들지 않는다. 그런데 있던 노트를 비운 것이라면 지워야 한다 —
     // 그냥 돌아가면 저장소에 옛 내용이 남아 절 표시도 그대로 남는다.
     const saved = note.id && Notes.get(note.id);
@@ -137,6 +152,7 @@ export function openNote({ id = null, ref = null, label = "" } = {}) {
       title: "", preacher: lastPreacher(), body: label ? label + " " : "",
     };
   }
+  seedBody = id ? "" : (note.body || "");
   $("noteText").value = note.body || "";
   $("noteTitle").value = note.title || "";
   $("notePreacherIn").value = note.preacher || "";

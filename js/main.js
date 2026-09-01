@@ -8,7 +8,7 @@ import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v36";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v37";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -748,6 +748,9 @@ async function main() {
     onOpenNote: (id) => { closeAll(); openNote({ id }); },
   });
   Notes.initNotes(BOOKS);
+  // v36 이전에 노트 아이콘만 눌러도 저장되던 껍데기를 한 번 걷어낸다.
+  // 조용히 지우면 "내 노트가 없어졌나" 싶으니 한 번은 알린다.
+  if (Notes.prunedStubs()) toast(`빈 노트 ${Notes.prunedStubs()}개를 정리했습니다`, 3000);
   initNoteEdit({
     jumpBible: (ref) => jumpTo(ref, { push: false }),
     markDraft,

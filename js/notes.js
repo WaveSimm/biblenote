@@ -54,6 +54,32 @@ function reindex() {
 
 /* ---------- 읽기·쓰기 ---------- */
 
+// 노트 아이콘을 눌렀다 그냥 닫기만 해도 저장되던 시절(v36 이전)에 쌓인 껍데기.
+// 본문이 '참조 한 줄' 뿐이고 제목·태그·설교자가 없는 것만 골라 지운다.
+// 실제 노트 294개를 훑어보니 이 모양인 것은 하나도 없었다 — 안전하다.
+let lastPruned = 0;
+export const prunedStubs = () => lastPruned;
+
+// 설교자는 세지 않는다 — 새 노트를 열면 자주 나온 사람이 미리 채워지므로
+// 사용자가 쓴 것이라는 증거가 못 된다.
+function isStub(n) {
+  if (n.imported || n.title || (n.tags && n.tags.length)) return false;
+  const raw = n.body || "";
+  if (!raw.trim()) return true;                    // 아예 빈 것
+  if (raw.trim().includes("\n")) return false;     // 두 줄 이상이면 뭔가 썼다
+  const a = (n.anchors || [])[0];
+  if (!a) return false;
+  // 그 한 줄이 통째로 참조뿐인가 ('창1:1 ')
+  return raw.slice(0, a.start).trim() === "" && raw.slice(a.end).trim() === "";
+}
+
+function pruneStubs() {
+  const before = notes.length;
+  notes = notes.filter((n) => !isStub(n));
+  lastPruned = before - notes.length;
+  return lastPruned;
+}
+
 export function initNotes(books) {
   buildNoteRefs(books);
   try {
@@ -62,6 +88,8 @@ export function initNotes(books) {
   } catch {
     notes = [];
   }
+  for (const n of notes) if (!n.anchors) refresh(n);
+  if (pruneStubs()) persist();
   reindex();
   return notes.length;
 }
