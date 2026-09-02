@@ -3,7 +3,7 @@
 //   VER  : 앱 셸(HTML/JS/CSS). 배포마다 새로 만들고 옛것은 지운다.
 //   DATA : 성경 본문·폰트. 내용이 변하지 않으므로 배포와 무관하게 계속 남긴다.
 //          (한 번 받은 책은 다시 내려받지 않는다)
-const VER = "biblenote-v39";
+const VER = "biblenote-v40";
 const DATA = "biblenote-data-v1";
 const SHELL = [
   "./", "index.html", "css/app.css",
@@ -49,6 +49,15 @@ self.addEventListener("activate", (e) => {
       const data = await caches.open(DATA);
       for (const req of await data.keys())
         if (isShellJson(new URL(req.url))) await data.delete(req);
+      // v40: 관주 정렬이 정경순 → 추천순으로 바뀌었다. DATA 는 불변 취급이라
+      // 이미 받은 xref 파일을 한 번만 걷어낸다 (표식을 남겨 두 번 지우지 않는다 —
+      // 매 배포마다 지우면 받아 둔 관주가 배포 때마다 사라진다)
+      const MARK = "data/.xref-order-v2";
+      if (!(await data.match(MARK))) {
+        for (const req of await data.keys())
+          if (new URL(req.url).pathname.includes("/data/xref/")) await data.delete(req);
+        await data.put(MARK, new Response("1"));
+      }
     } catch { /* 못 지워도 진행 */ }
     const keys = await caches.keys();
     await Promise.all(keys.filter((k) => k !== VER && k !== DATA).map((k) => caches.delete(k)));
