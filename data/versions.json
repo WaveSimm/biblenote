@@ -6,6 +6,12 @@
   "lang": "ko"
  },
  {
+  "code": "krh",
+  "name": "개역한글",
+  "short": "한글",
+  "lang": "ko"
+ },
+ {
   "code": "ckb",
   "name": "공동번역",
   "short": "공동",

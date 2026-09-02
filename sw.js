@@ -3,7 +3,7 @@
 //   VER  : 앱 셸(HTML/JS/CSS). 배포마다 새로 만들고 옛것은 지운다.
 //   DATA : 성경 본문·폰트. 내용이 변하지 않으므로 배포와 무관하게 계속 남긴다.
 //          (한 번 받은 책은 다시 내려받지 않는다)
-const VER = "biblenote-v37";
+const VER = "biblenote-v38";
 const DATA = "biblenote-data-v1";
 const SHELL = [
   "./", "index.html", "css/app.css",
@@ -13,8 +13,11 @@ const SHELL = [
   "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png",
 ];
 
+// books.json·versions.json 은 data/ 아래 있지만 셸이다 — 번역본을 추가하면 바뀐다.
+// 불변 취급해 DATA 에 넣으면 새 번역본이 기존 설치 기기에 영영 나타나지 않는다.
+const isShellJson = (url) => /\/data\/(books|versions)\.json$/.test(url.pathname);
 const isData = (url) =>
-  url.pathname.includes("/data/") ||
+  (url.pathname.includes("/data/") && !isShellJson(url)) ||
   url.hostname.includes("fonts.googleapis.com") ||
   url.hostname.includes("fonts.gstatic.com");
 
@@ -40,6 +43,12 @@ async function rescueData() {
 self.addEventListener("activate", (e) => {
   e.waitUntil((async () => {
     try { await rescueData(); } catch { /* 옮기지 못해도 진행 */ }
+    // 지난 배포들이 DATA 로 옮겨 둔 셸 JSON 을 걷어낸다 (isData 가 그때는 이 둘을 본문으로 봤다)
+    try {
+      const data = await caches.open(DATA);
+      for (const req of await data.keys())
+        if (isShellJson(new URL(req.url))) await data.delete(req);
+    } catch { /* 못 지워도 진행 */ }
     const keys = await caches.keys();
     await Promise.all(keys.filter((k) => k !== VER && k !== DATA).map((k) => caches.delete(k)));
     await self.clients.claim();
