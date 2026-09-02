@@ -24,6 +24,13 @@ function normalize(raw) {
     preacher: raw.preacher || undefined,
     series: raw.series || undefined,
     seriesNo: raw.seriesNo || undefined,
+    // 앱에서 내보낸 파일이 도로 들어올 때 잃으면 안 되는 것들 — 태그, 옮겨온 표시,
+    // 만든 시각(같은 날 노트의 정렬 순서가 여기 달려 있다).
+    // 도구가 만든 마이그레이션 파일에는 애초에 없는 필드라, 있을 때만 통과시킨다.
+    tags: Array.isArray(raw.tags) && raw.tags.length ? raw.tags : undefined,
+    imported: raw.imported || undefined,
+    createdAt: raw.createdAt || undefined,
+    updatedAt: raw.updatedAt || undefined,
     body,
   };
   for (const k of Object.keys(n)) if (n[k] === undefined) delete n[k];

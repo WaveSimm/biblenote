@@ -174,7 +174,9 @@ export function importNotes(arr, { imported = true } = {}) {
     const n = { ...raw };
     if (!n.id) n.id = uid();          // id 는 부르는 쪽에서 정해 오는 게 낫다 (다시 가져와도 늘지 않게)
     if (byId.has(n.id)) continue;
-    if (imported) n.imported = true;
+    // createdAt 이 있으면 앱을 거친 노트다(내보내기 왕복) — 제 플래그를 믿는다.
+    // 없으면 도구가 만든 마이그레이션 파일이라 여기서 옮겨온 표시를 단다.
+    if (imported && !n.createdAt) n.imported = true;
     if (typeof n.body !== "string") n.body = (n.body || []).join("\n");
     refresh(n);
     n.createdAt = n.createdAt || Date.parse(n.date) || Date.now();
