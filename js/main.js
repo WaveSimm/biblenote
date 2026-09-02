@@ -8,7 +8,7 @@ import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v38";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v39";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -32,8 +32,12 @@ class Pane {
     for (const ev of ["pointerdown", "wheel", "touchstart"])
       this.root.addEventListener(ev, () => { active = this; }, { passive: true });
     this.root.addEventListener("click", (e) => {
-      const sp = e.target.closest && e.target.closest("span.v.noted");
+      // 절 번호를 탭하면 어느 절이든 절 시트(노트+관주)가 열린다.
+      // 문장 탭은 노트 있는 절만 — 관주는 94%의 절에 있어 문장 탭으로 열면
+      // 스치기만 해도 시트가 뜬다 (관주_설계문서.md §3.1).
+      const sp = e.target.closest && e.target.closest("span.v");
       if (!sp) return;
+      if (!e.target.closest("sup") && !sp.classList.contains("noted")) return;
       const p = sp.closest("p.ch");
       const b = +p.dataset.b, c = +p.dataset.c, v = +sp.dataset.v;
       openVerseNotes(b, c, v, refLabel({ b, c, v }));
@@ -760,6 +764,8 @@ async function main() {
   initVerseNotes({
     openSheet, closeAll,
     openNote: (o) => openNote(o),
+    jump: (ref) => { closeAll(); jumpTo(ref); },     // 관주 탭 → 이동, 뒤로가기로 복귀
+    version: () => active.version,                   // 미리보기는 지금 읽는 번역본으로
   });
   initNotesIO({ onImported: remarkAllNoted });
 

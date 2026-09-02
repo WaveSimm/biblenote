@@ -9,6 +9,10 @@ const $ = (id) => document.getElementById(id);
 const bookUrl = (code, n) => `data/${code}/${n}.json`;
 const absUrl = (code, n) => new URL(bookUrl(code, n), location.href).href;
 
+// 관주도 본문과 같은 파일 모양(data/xref/{n}.json)이라 번역본 하나처럼 취급한다.
+// 탭한 책은 어차피 자동으로 캐시되지만, 미리 받아 두면 안 가 본 책도 오프라인에서 뜬다.
+const items = () => [...VERSIONS, { code: "xref", name: "관주" }];
+
 const state = new Map();   // code -> { done, running, stop }
 const rows = new Map();    // code -> { stat, btn }
 
@@ -49,7 +53,7 @@ async function updateTotal() {
 async function countAll() {
   const cache = await caches.open(DATA_CACHE);
   const have = new Set((await cache.keys()).map((r) => r.url));
-  for (const vm of VERSIONS) {
+  for (const vm of items()) {
     st(vm.code).done = BOOKS.filter((b) => have.has(absUrl(vm.code, b.n))).length;
   }
 }
@@ -98,7 +102,7 @@ async function downloadAll() {
   const btn = $("dlAll");
   btn.disabled = true;
   try {
-    for (const vm of VERSIONS) {          // 한 번에 한 종씩 — 요청이 몰리지 않게
+    for (const vm of items()) {          // 한 번에 한 종씩 — 요청이 몰리지 않게
       if (st(vm.code).done < BOOKS.length) await download(vm.code);
     }
   } finally {
@@ -110,7 +114,7 @@ export async function renderOffline() {
   const box = $("dlList");
   if (!box.childElementCount) {          // 목록은 한 번만 만든다
     rows.clear();
-    for (const vm of VERSIONS) {
+    for (const vm of items()) {
       const row = document.createElement("div");
       row.className = "dl-row";
       const name = document.createElement("span");
@@ -129,6 +133,6 @@ export async function renderOffline() {
     $("dlAll").onclick = downloadAll;
   }
   await countAll();
-  for (const vm of VERSIONS) paint(vm.code);
+  for (const vm of items()) paint(vm.code);
   updateTotal();
 }

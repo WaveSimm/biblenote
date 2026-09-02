@@ -1,12 +1,15 @@
-// 절 노트 — 성경을 읽다 색칠된 절을 누르면 그 절의 노트들을 보여 준다.
+// 절 시트 — 절 번호(또는 색칠된 절)를 누르면 그 절에 매달린 것들을 보여 준다:
+// 내 노트(들은 설교)와 관주(성경 자신의 참조). 관주_설계문서.md §3.3.
 //
-// 조각만 떼어 보여주면 설교의 맥락이 사라진다. 그래서 노트 전체를 펼치되
-// 눌린 절에 해당하는 조각만 옅게 강조한다 (설계문서 §6·§7.5).
+// 노트는 조각만 떼면 설교의 맥락이 사라지므로 전체를 펼치되
+// 눌린 절에 해당하는 조각만 옅게 강조한다 (설교노트 설계문서 §6·§7.5).
 
 import * as Notes from "./notes.js";
+import { xrefsAt } from "./xref.js";
+import { getBook, bookMeta } from "./data.js";
 
 const $ = (id) => document.getElementById(id);
-let hooks = {};        // { openSheet, closeAll, openNote }
+let hooks = {};        // { openSheet, closeAll, openNote, jump, version }
 
 let shown = null;        // 지금 시트에 띄운 절
 
@@ -16,8 +19,9 @@ export function initVerseNotes(h) { hooks = h; }
 export function refreshVerseNotes() {
   if (!shown || $("sheetVerse").hidden) return;
   const { b, c, v, label } = shown;
-  if (!Notes.notesAt(b, c, v).length) { hooks.closeAll(); shown = null; return; }
-  openVerseNotes(b, c, v, label, { keepScroll: true });
+  openVerseNotes(b, c, v, label, { keepScroll: true }).then((ok) => {
+    if (!ok) { hooks.closeAll(); shown = null; }
+  });
 }
 
 const SERVICE = { 주일낮: "주일 낮", 주일밤: "주일 밤", 수요: "수요", 특별집회: "특별집회" };
@@ -98,17 +102,63 @@ function anchorFor(note, b, c, v) {
   return null;
 }
 
-export function openVerseNotes(b, c, v, label, { keepScroll = false } = {}) {
+function secHead(text) {
+  const el = document.createElement("div");
+  el.className = "vn-sec";
+  el.textContent = text;
+  return el;
+}
+
+/** 관주 한 줄: 라벨(정경 순) + 현재 번역본 미리보기. ● 은 그 절에도 내 노트가 있다는 표시 */
+function xrefRow(x) {
+  const row = document.createElement("div");
+  row.className = "xr";
+
+  const ref = document.createElement("span");
+  ref.className = "xr-ref";
+  ref.textContent = `${bookMeta(x.book).abbr} ${x.c}:${x.v}` + (x.endV ? `-${x.endV}` : "");
+  let hasNote = false;
+  for (let vv = x.v; vv <= (x.endV || x.v); vv++)
+    if (Notes.hasNoteAt(x.book, x.c, vv)) { hasNote = true; break; }
+  if (hasNote) {
+    const dot = document.createElement("span");
+    dot.className = "xr-dot";
+    dot.textContent = "●";
+    ref.append(" ", dot);
+  }
+
+  const prev = document.createElement("span");
+  prev.className = "xr-prev";
+  getBook(hooks.version(), x.book).then((d) => {
+    const t = d.chapters[x.c - 1] && d.chapters[x.c - 1][x.v - 1];
+    if (t) prev.textContent = t;         // 범위여도 미리보기는 첫 절만 (설계 §3.3)
+  }).catch(() => { /* 오프라인에 없는 책 — 라벨만 남긴다 */ });
+
+  row.append(ref, prev);
+  row.onclick = () => hooks.jump({ b: x.book, c: x.c, v: x.v });
+  return row;
+}
+
+export async function openVerseNotes(b, c, v, label, { keepScroll = false } = {}) {
   const list = Notes.notesAt(b, c, v);
-  if (!list.length) return false;
+  const xrefs = await xrefsAt(b, c, v);
+  if (!list.length && !xrefs.length) return false;
   shown = { b, c, v, label };
 
   $("verseTitle").textContent = label;
-  $("verseCount").textContent = `노트 ${list.length}개`;
+  const bits = [];
+  if (list.length) bits.push(`노트 ${list.length}개`);
+  if (xrefs.length) bits.push(`관주 ${xrefs.length}개`);
+  $("verseCount").textContent = bits.join(" · ");
+
   const box = $("verseNotes");
   const top = keepScroll ? box.scrollTop : 0;   // 지우기 전에 읽어 둔다 (지우면 0 이 된다)
   box.replaceChildren();
+  // 둘 다 있을 때만 섹션 제목을 단다 — 하나뿐이면 제목 없이 담백하게 (설계 §3.3)
+  if (list.length && xrefs.length) box.append(secHead("내 노트"));
   for (const n of list) box.append(noteCard(n, anchorFor(n, b, c, v)));
+  if (list.length && xrefs.length) box.append(secHead("관주"));
+  for (const x of xrefs) box.append(xrefRow(x));
 
   if (!keepScroll) hooks.openSheet($("sheetVerse"));
   box.scrollTop = top;
