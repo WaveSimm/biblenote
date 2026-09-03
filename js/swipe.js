@@ -1,20 +1,23 @@
 // 좌우 스와이프 인식 — 터치 전용, 임계값을 넘으면 한 번 발화한다.
 //
 // 세로 스크롤 본문 위의 가로 제스처라 오작동 비용이 크다. 그래서 엄격하다:
-// - 가장자리 24px 에서 시작한 터치는 무시 — 안드로이드 뒤로가기 제스처(좌우
-//   가장자리 안쪽 쓸기)와 모양이 같아서, 경계에서 어긋난 터치가 노트를 열면
-//   뒤로가기라는 몸에 밴 동작에 대한 신뢰가 깎인다
 // - 가로 이동이 60px 이상이고 세로의 2배를 넘을 때만 (스크롤과 구분)
 // - 손가락을 따라오는 애니메이션은 없다 — 버튼 전환과 같은 느낌으로 즉시 전환
 //
 // ★ 판정은 touchmove 중에 한다. 실기기 크롬은 터치가 스크롤로 판정되는 순간
 //   touchend 대신 touchcancel 을 보내므로, end 만 기다리면 스와이프가 영영
 //   안 잡힌다 (v41 이 실제로 그랬다). move 에서 임계값을 넘는 즉시 발화한다.
+//
+// ★ 가장자리 여유는 두지 않는다 (v45 에서 제거). v44 진단으로 확인한 사실 —
+//   왼쪽으로 쓸 때 엄지는 화면 오른쪽 끝(가장자리 8px 안)에서 출발한다.
+//   큰글씨 설정 기기(w=338)에서 24px 여유가 자연스러운 시작점을 전부 삼켰다.
+//   뒤로가기 제스처와의 충돌 걱정은 기우다: 제스처 내비 기기는 시스템이
+//   가장자리 터치를 우리보다 먼저 소비하고, 3버튼 기기는 충돌 자체가 없다.
 // 진단 — 주소에 #debug 를 붙여 열면 main.js 가 오버레이를 만들고 여기로 잇는다
 const dbg = (s) => { if (window.__swipeDbg) window.__swipeDbg(s); };
 
 export function onSwipe(el, { left, right, enabled = () => true } = {}) {
-  const EDGE = 24, DIST = 60;
+  const DIST = 60;
   let sx = 0, sy = 0, live = false;
 
   const fire = (t, why) => {
@@ -29,10 +32,9 @@ export function onSwipe(el, { left, right, enabled = () => true } = {}) {
 
   el.addEventListener("touchstart", (e) => {
     const t = e.touches[0];
-    live = e.touches.length === 1 &&
-           t.clientX > EDGE && t.clientX < innerWidth - EDGE && enabled();
+    live = e.touches.length === 1 && enabled();
     sx = t.clientX; sy = t.clientY;
-    dbg(`start x=${Math.round(sx)} live=${live} en=${enabled()}`);
+    dbg(`start x=${Math.round(sx)} live=${live}`);
   }, { passive: true });
   el.addEventListener("touchmove", (e) => {
     if (!live) return;
