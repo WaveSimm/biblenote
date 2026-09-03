@@ -10,6 +10,7 @@ import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.
 import { initNotesIO, paintUsage } from "./notesio.js";
 
 const APP_VERSION = "v50";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+                             // ★ 다음 배포부터 v5.01, v5.02 … 방식 (사용자 결정, 2026-09-03)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
