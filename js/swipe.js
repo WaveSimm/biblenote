@@ -10,14 +10,19 @@
 // ★ 판정은 touchmove 중에 한다. 실기기 크롬은 터치가 스크롤로 판정되는 순간
 //   touchend 대신 touchcancel 을 보내므로, end 만 기다리면 스와이프가 영영
 //   안 잡힌다 (v41 이 실제로 그랬다). move 에서 임계값을 넘는 즉시 발화한다.
+// 진단 — 주소에 #debug 를 붙여 열면 main.js 가 오버레이를 만들고 여기로 잇는다
+const dbg = (s) => { if (window.__swipeDbg) window.__swipeDbg(s); };
+
 export function onSwipe(el, { left, right, enabled = () => true } = {}) {
   const EDGE = 24, DIST = 60;
   let sx = 0, sy = 0, live = false;
 
-  const fire = (t) => {
+  const fire = (t, why) => {
     const dx = t.clientX - sx, dy = t.clientY - sy;
+    dbg(`${why} dx=${Math.round(dx)} dy=${Math.round(dy)}`);
     if (Math.abs(dx) < DIST || Math.abs(dx) < Math.abs(dy) * 2) return;
     live = false;
+    dbg(`FIRE ${dx < 0 ? "left" : "right"}`);
     if (dx < 0 && left) left();
     else if (dx > 0 && right) right();
   };
@@ -27,16 +32,17 @@ export function onSwipe(el, { left, right, enabled = () => true } = {}) {
     live = e.touches.length === 1 &&
            t.clientX > EDGE && t.clientX < innerWidth - EDGE && enabled();
     sx = t.clientX; sy = t.clientY;
+    dbg(`start x=${Math.round(sx)} live=${live} en=${enabled()}`);
   }, { passive: true });
   el.addEventListener("touchmove", (e) => {
     if (!live) return;
     if (e.touches.length > 1) { live = false; return; }
-    fire(e.touches[0]);
+    fire(e.touches[0], "move");
   }, { passive: true });
   el.addEventListener("touchend", (e) => {
     if (!live) return;
     live = false;
-    fire(e.changedTouches[0]);
+    fire(e.changedTouches[0], "end");
   }, { passive: true });
-  el.addEventListener("touchcancel", () => { live = false; }, { passive: true });
+  el.addEventListener("touchcancel", () => { dbg("cancel"); live = false; }, { passive: true });
 }

@@ -9,7 +9,7 @@ import { onSwipe } from "./swipe.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v43";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v44";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -780,6 +780,22 @@ async function main() {
     version: () => active.version,                   // 미리보기는 지금 읽는 번역본으로
   });
   initNotesIO({ onImported: remarkAllNoted });
+
+  // 스와이프 진단 오버레이 — 주소 뒤에 #debug 를 붙여 열면 나타난다 (임시 도구)
+  if (location.hash.includes("debug")) {
+    const d = document.createElement("div");
+    d.style.cssText = "position:fixed;left:4px;bottom:64px;z-index:999;background:rgba(0,0,0,.78);" +
+      "color:#7f7;font:11px/1.5 monospace;padding:6px 8px;border-radius:6px;max-width:86vw;" +
+      "pointer-events:none;white-space:pre";
+    document.body.append(d);
+    const lines = [`${APP_VERSION} w=${innerWidth} split=${matchMedia("(min-width: 820px)").matches}`];
+    window.__swipeDbg = (s) => {
+      lines.push(s);
+      while (lines.length > 14) lines.splice(1, 1);
+      d.textContent = lines.join("\n");
+    };
+    window.__swipeDbg("대기 중 — 쓸어보세요");
+  }
 
   syncViewportHeight();
   if (window.visualViewport) {
