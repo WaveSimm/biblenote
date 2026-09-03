@@ -8,6 +8,7 @@
 
 import { resolveAnchors } from "./noteref.js";
 import * as Notes from "./notes.js";
+import { onSwipe } from "./swipe.js";
 
 const $ = (id) => document.getElementById(id);
 const WD = ["일", "월", "화", "수", "목", "금", "토"];
@@ -126,6 +127,9 @@ export function initNoteEdit(h) {
   $("noteBack").onclick = closeNote;
   $("notePassage").onclick = () => { if (anchors[0]) gotoAnchor(anchors[0]); };
   $("noteToBible").onclick = () => toBible();
+  // 오른쪽으로 쓸면 성경으로 — 버튼과 같은 동작. 설계의 '스와이프 보류'를 푼 것.
+  // 분할 화면에선 둘 다 보이므로 무의미하다.
+  onSwipe($("noteView"), { right: () => toBible(), enabled: () => !isSplit() });
   // 노트를 쓰다가 지난 노트를 찾아볼 수 있게 — 시트가 이 화면 위로 열린다
   $("noteFind").onclick = () => { save(); hooks.openNoteList && hooks.openNoteList(); };
   $("noteReturn").onclick = toNote;
@@ -183,6 +187,9 @@ export function closeNote() {
 }
 
 export const isEditing = () => !!note;
+
+/** 성경 화면에서 스와이프로 돌아올 때 — 쓰던 노트가 있으면 그리로 (커서 그대로) */
+export function resumeNote() { if (note) toNote(); }
 
 /* ---------- 성경 ⇄ 노트 ---------- */
 

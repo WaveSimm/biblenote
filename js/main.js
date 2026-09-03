@@ -4,11 +4,12 @@ import { loadSettings, saveSettings, loadHistory, saveHistory } from "./store.js
 import { renderOffline } from "./offline.js";
 import { initFind, openFind } from "./search.js";
 import * as Notes from "./notes.js";
-import { initNoteEdit, openNote, isEditing } from "./noteedit.js";
+import { initNoteEdit, openNote, isEditing, resumeNote } from "./noteedit.js";
+import { onSwipe } from "./swipe.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v40";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v41";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -41,6 +42,17 @@ class Pane {
       const p = sp.closest("p.ch");
       const b = +p.dataset.b, c = +p.dataset.c, v = +sp.dataset.v;
       openVerseNotes(b, c, v, refLabel({ b, c, v }));
+    });
+    // 왼쪽으로 쓸면 노트 쪽으로 — 쓰던 노트가 있으면 그리로(커서 그대로),
+    // 없으면 노트 목록. 하단 노트 버튼과 짝이다: 버튼은 새로, 스와이프는 이어서.
+    onSwipe(this.root, {
+      left: () => {
+        if (isEditing()) { resumeNote(); return; }
+        openSheet($("sheetFind"));
+        openFind(active.version, { tab: "note" });
+      },
+      enabled: () => !matchMedia("(min-width: 820px)").matches
+                     && SHEETS.every((id) => $(id).hidden),
     });
   }
 
