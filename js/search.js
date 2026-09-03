@@ -228,6 +228,9 @@ export function openFind(version, opts = {}) {
   }
   $("findGo").disabled = !running && !$("findInput").value.trim();
   setTab(opts.tab || tab);
+  // 스와이프로 노트 목록을 열 때는 검색이 아니라 열람이다 — 키보드가 올라오면
+  // 목록이 반쯤 가려지므로 커서를 주지 않는다 (focus: false)
+  if (opts.focus === false) return;
   $("findInput").focus();
   $("findInput").select();
 }
