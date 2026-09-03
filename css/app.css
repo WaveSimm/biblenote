@@ -113,7 +113,10 @@ body {
 
 /* ---- panes ---- */
 #panes { position: fixed; inset: 0; display: flex; flex-direction: column; }
-.pane { flex: 1 1 0; overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+/* touch-action: pan-y — 세로 팬만 브라우저 몫으로 남긴다. 이게 없으면 안드로이드
+   크롬이 가로 움직임도 스크롤 시도로 가져가며 touchmove 를 끊어(touchcancel),
+   스와이프(js/swipe.js)가 임계값에 닿을 이벤트를 영영 받지 못한다. */
+.pane { flex: 1 1 0; overflow-y: auto; overscroll-behavior: contain; min-height: 0; touch-action: pan-y; }
 body.compare .pane + .pane { border-top: 2px solid var(--line); }
 @media (orientation: landscape) {
   body.compare #panes { flex-direction: row; }
@@ -294,7 +297,11 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
   z-index: 70;
   display: flex; flex-direction: column;
   background: var(--bg); color: var(--fg);
+  /* 가로 스와이프(→ 성경)가 touchcancel 로 끊기지 않게 — .pane 의 주석 참조.
+     터치된 요소의 touch-action 이 기준이라 textarea 등 자식에도 각각 준다. */
+  touch-action: pan-y;
 }
+#noteView textarea, #noteView #noteHL { touch-action: pan-y; }
 
 #noteBar {
   display: flex; align-items: center; gap: 8px;
