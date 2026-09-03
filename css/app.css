@@ -125,9 +125,12 @@ body.compare .pane + .pane { border-top: 2px solid var(--line); }
 .content {
   position: relative;
   max-width: 44em; margin: 0 auto;
-  padding: calc(var(--topbar-h, 56px) + 24px) 22px calc(var(--bottombar-h, 56px) + 40px);
+  /* 좌우 14px — 큰 글자 설정(뷰포트 ~340px)에서 22px 은 줄당 한 글자를 잡아먹었다 */
+  padding: calc(var(--topbar-h, 56px) + 24px) 14px calc(var(--bottombar-h, 56px) + 40px);
   font-size: var(--fs, 19px); line-height: var(--lh, 1.8);
 }
+/* 여백 장 번호를 켜면 번호가 살 왼쪽 여백을 넉넉히 남긴다 */
+body.chmarks .content { padding-left: 26px; }
 body.serif .content { font-family: "Noto Serif KR", Georgia, "Times New Roman", serif; }
 
 /* 책 제목: 책 경계에만 표시되는 얇은 구분 */
