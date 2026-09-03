@@ -6,22 +6,37 @@
 //   뒤로가기라는 몸에 밴 동작에 대한 신뢰가 깎인다
 // - 가로 이동이 60px 이상이고 세로의 2배를 넘을 때만 (스크롤과 구분)
 // - 손가락을 따라오는 애니메이션은 없다 — 버튼 전환과 같은 느낌으로 즉시 전환
+//
+// ★ 판정은 touchmove 중에 한다. 실기기 크롬은 터치가 스크롤로 판정되는 순간
+//   touchend 대신 touchcancel 을 보내므로, end 만 기다리면 스와이프가 영영
+//   안 잡힌다 (v41 이 실제로 그랬다). move 에서 임계값을 넘는 즉시 발화한다.
 export function onSwipe(el, { left, right, enabled = () => true } = {}) {
   const EDGE = 24, DIST = 60;
   let sx = 0, sy = 0, live = false;
+
+  const fire = (t) => {
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) < DIST || Math.abs(dx) < Math.abs(dy) * 2) return;
+    live = false;
+    if (dx < 0 && left) left();
+    else if (dx > 0 && right) right();
+  };
+
   el.addEventListener("touchstart", (e) => {
     const t = e.touches[0];
     live = e.touches.length === 1 &&
            t.clientX > EDGE && t.clientX < innerWidth - EDGE && enabled();
     sx = t.clientX; sy = t.clientY;
   }, { passive: true });
+  el.addEventListener("touchmove", (e) => {
+    if (!live) return;
+    if (e.touches.length > 1) { live = false; return; }
+    fire(e.touches[0]);
+  }, { passive: true });
   el.addEventListener("touchend", (e) => {
     if (!live) return;
     live = false;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - sx, dy = t.clientY - sy;
-    if (Math.abs(dx) < DIST || Math.abs(dx) < Math.abs(dy) * 2) return;
-    if (dx < 0 && left) left();
-    else if (dx > 0 && right) right();
+    fire(e.changedTouches[0]);
   }, { passive: true });
+  el.addEventListener("touchcancel", () => { live = false; }, { passive: true });
 }

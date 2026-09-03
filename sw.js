@@ -3,7 +3,7 @@
 //   VER  : 앱 셸(HTML/JS/CSS). 배포마다 새로 만들고 옛것은 지운다.
 //   DATA : 성경 본문·폰트. 내용이 변하지 않으므로 배포와 무관하게 계속 남긴다.
 //          (한 번 받은 책은 다시 내려받지 않는다)
-const VER = "biblenote-v41";
+const VER = "biblenote-v42";
 const DATA = "biblenote-data-v1";
 const SHELL = [
   "./", "index.html", "css/app.css",
