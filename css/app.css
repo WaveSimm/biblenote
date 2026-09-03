@@ -163,6 +163,13 @@ span.v sup {
 }
 span.v sup::after { content: ""; position: absolute; inset: -12px -10px; }
 body.novnum span.v sup { display: none; }
+/* 단락 제목 (개역개정 소제목) — 본문보다 살짝 작고 굵게, 설정으로 숨김 */
+span.hd {
+  display: block; font-weight: 700; font-size: .88em; line-height: 1.4;
+  margin: 1.15em 0 .4em; color: var(--fg);
+}
+p.ch span.hd:first-child { margin-top: .2em; }
+body.noheads span.hd { display: none; }
 /* 절 줄바꿈 모드: 설교·찾아보기용 — 절마다 새 줄에서 시작 */
 body.vbreaks span.v { display: block; }
 span.v.miss sup { opacity: .3; }

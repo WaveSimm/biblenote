@@ -3,20 +3,20 @@
 //   VER  : 앱 셸(HTML/JS/CSS). 배포마다 새로 만들고 옛것은 지운다.
 //   DATA : 성경 본문·폰트. 내용이 변하지 않으므로 배포와 무관하게 계속 남긴다.
 //          (한 번 받은 책은 다시 내려받지 않는다)
-const VER = "biblenote-v46";
+const VER = "biblenote-v47";
 const DATA = "biblenote-data-v1";
 const SHELL = [
   "./", "index.html", "css/app.css",
   "js/main.js", "js/data.js", "js/parser.js", "js/store.js", "js/offline.js", "js/search.js",
   "js/noteref.js", "js/notes.js", "js/noteedit.js", "js/versenotes.js", "js/notesio.js", "js/notelist.js",
   "js/xref.js", "js/swipe.js",
-  "data/books.json", "data/versions.json",
+  "data/books.json", "data/versions.json", "data/headings.json",
   "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png",
 ];
 
 // books.json·versions.json 은 data/ 아래 있지만 셸이다 — 번역본을 추가하면 바뀐다.
 // 불변 취급해 DATA 에 넣으면 새 번역본이 기존 설치 기기에 영영 나타나지 않는다.
-const isShellJson = (url) => /\/data\/(books|versions)\.json$/.test(url.pathname);
+const isShellJson = (url) => /\/data\/(books|versions|headings)\.json$/.test(url.pathname);
 const isData = (url) =>
   (url.pathname.includes("/data/") && !isShellJson(url)) ||
   url.hostname.includes("fonts.googleapis.com") ||

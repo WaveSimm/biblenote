@@ -1,4 +1,4 @@
-import { initData, getBook, BOOKS, VERSIONS, bookMeta, versionMeta, refLabel } from "./data.js";
+import { initData, getBook, BOOKS, VERSIONS, bookMeta, versionMeta, refLabel, headingAt } from "./data.js";
 import { buildAliases, parseRef } from "./parser.js";
 import { loadSettings, saveSettings, loadHistory, saveHistory } from "./store.js";
 import { renderOffline } from "./offline.js";
@@ -9,7 +9,7 @@ import { onSwipe } from "./swipe.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v46";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v47";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -73,6 +73,15 @@ class Pane {
       p.dataset.b = b;
       p.dataset.c = cn;
       verses.forEach((t, vi) => {
+        // 단락 제목(개역개정 소제목) — 항상 그려 두고 설정(noheads)으로 숨긴다.
+        // 조판 토글에 재렌더가 필요 없도록.
+        const hd = headingAt(b, cn, vi + 1);
+        if (hd) {
+          const h = document.createElement("span");
+          h.className = "hd";
+          h.textContent = hd;
+          p.append(h);
+        }
         const s = document.createElement("span");
         s.className = "v" + (t == null ? " miss" : "")
                           + (Notes.hasNoteAt(b, cn, vi + 1) ? " noted" : "");
@@ -143,8 +152,8 @@ class Pane {
     if (!target) return null;
     const b = +target.dataset.b, c = +target.dataset.c;
     for (const s of target.children) {
-      if (s.tagName === "SPAN" && s.getBoundingClientRect().bottom > base)
-        return { b, c, v: +s.dataset.v };
+      if (s.tagName === "SPAN" && s.dataset.v && s.getBoundingClientRect().bottom > base)
+        return { b, c, v: +s.dataset.v };    // 단락 제목 span(.hd)에는 data-v 가 없다
     }
     return { b, c, v: 1 };
   }
@@ -399,7 +408,7 @@ function remarkAllNoted() {
     for (const p of pane.content.querySelectorAll("p.ch")) {
       const b = +p.dataset.b, c = +p.dataset.c;
       for (const sp of p.children) {
-        if (sp.tagName !== "SPAN") continue;
+        if (sp.tagName !== "SPAN" || !sp.dataset.v) continue;   // 단락 제목 span 제외
         sp.classList.toggle("noted", Notes.hasNoteAt(b, c, +sp.dataset.v));
       }
     }
@@ -677,6 +686,7 @@ function applySettings() {
   document.documentElement.style.setProperty("--lh", LH[settings.lineHeight]);
   document.body.classList.toggle("serif", settings.face === "serif");
   document.body.classList.toggle("novnum", !settings.vnum);
+  document.body.classList.toggle("noheads", !settings.heads);
   document.body.classList.toggle("chmarks", settings.chmarks);
   document.body.classList.toggle("vbreaks", settings.vbreak);
   $("btnVBreak").classList.toggle("on", settings.vbreak);
@@ -712,6 +722,7 @@ function syncSegs() {
   mark("segTheme", "theme", settings.theme);
   mark("segFace", "face", settings.face);
   mark("segVnum", "vnum", settings.vnum ? 1 : 0);
+  mark("segHeads", "heads", settings.heads ? 1 : 0);
   mark("segChmark", "chmark", settings.chmarks ? 1 : 0);
 }
 
@@ -721,6 +732,7 @@ function wireSettings() {
   $("segTheme").onclick = (e) => { if (e.target.dataset.theme) { settings.theme = e.target.dataset.theme; done(); } };
   $("segFace").onclick = (e) => { if (e.target.dataset.face) { settings.face = e.target.dataset.face; done(); } };
   $("segVnum").onclick = (e) => { if (e.target.dataset.vnum) { settings.vnum = e.target.dataset.vnum === "1"; done(); } };
+  $("segHeads").onclick = (e) => { if (e.target.dataset.heads) { settings.heads = e.target.dataset.heads === "1"; done(); } };
   $("segChmark").onclick = (e) => { if (e.target.dataset.chmark) { settings.chmarks = e.target.dataset.chmark === "1"; done(); } };
   function done() { saveSettings(settings); applySettings(); refitToCurrent(); }
 }

@@ -14,6 +14,7 @@ export const DEFAULTS = {
   vnum: true,                     // 절 번호 표시
   chmarks: true,                  // 여백 장 번호
   vbreak: false,                  // 절마다 줄바꿈 (기본: 이어쓰기)
+  heads: true,                    // 단락 제목(개역개정 소제목) 표시
   recentBooks: [],                // 최근 이동한 책 번호
 };
 

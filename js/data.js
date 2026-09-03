@@ -1,15 +1,21 @@
 // BibleRepository: 본문 데이터의 유일한 공급자
 export let BOOKS = null;      // books.json (66권 메타)
 export let VERSIONS = null;   // versions.json
+let HEADINGS = null;          // headings.json — "책:장:절" -> 단락 제목 (개역개정 소제목)
 
 const cache = new Map();      // "code:book" -> Promise<{book, chapters}>
 
 export async function initData() {
-  [BOOKS, VERSIONS] = await Promise.all([
+  [BOOKS, VERSIONS, HEADINGS] = await Promise.all([
     fetch("data/books.json").then(r => r.json()),
     fetch("data/versions.json").then(r => r.json()),
+    // 소제목은 없어도 앱은 돌아야 한다 (옛 캐시, 파일 미배포)
+    fetch("data/headings.json").then(r => (r.ok ? r.json() : null)).catch(() => null),
   ]);
 }
+
+/** 그 절 앞에 걸린 단락 제목 — 좌표 기반이라 어느 번역본에서든 같은 자리에 선다 */
+export const headingAt = (b, c, v) => (HEADINGS ? HEADINGS[`${b}:${c}:${v}`] : undefined);
 
 export function getBook(code, b) {
   const key = code + ":" + b;
