@@ -9,8 +9,8 @@ import { onSwipe } from "./swipe.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v50";   // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
-                             // ★ 다음 배포부터 v5.01, v5.02 … 방식 (사용자 결정, 2026-09-03)
+const APP_VERSION = "v5.01"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+                             // ★ v50 까지는 정수, 이후 v5.01, v5.02 … 방식 (사용자 결정, 2026-09-03)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
 
@@ -793,6 +793,17 @@ async function main() {
     version: () => active.version,                   // 미리보기는 지금 읽는 번역본으로
   });
   initNotesIO({ onImported: remarkAllNoted });
+
+  // 화면 꺼짐 방지 — 성경을 펴 둔 동안은 책처럼 화면이 살아 있어야 한다.
+  // 잠금은 화면을 벗어나면 시스템이 자동 해제하므로, 돌아올 때마다 다시 건다.
+  if ("wakeLock" in navigator) {
+    const keepAwake = () =>
+      navigator.wakeLock.request("screen").catch(() => { /* 저전력 모드 등 — 조용히 포기 */ });
+    keepAwake();
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") keepAwake();
+    });
+  }
 
   syncViewportHeight();
   if (window.visualViewport) {
