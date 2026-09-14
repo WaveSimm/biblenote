@@ -9,7 +9,7 @@ import { onSwipe } from "./swipe.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v5.09"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v5.10"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
                              // ★ v50 까지는 정수, 이후 v5.01, v5.02 … 방식 (사용자 결정, 2026-09-03)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
@@ -511,14 +511,18 @@ function toast(msg, ms = 2000) {
 // 세운다. ③ 때문에 하나만 세워서는 안 된다 — 뒤로가기로 겹을 닫고 나면 다시
 // 세울 기회가 없으니, 열려 있는 겹 수 + 1 만큼 미리 쌓아 둔다.
 //
-// 한 번도 만지지 않고 누른 뒤로가기는 막을 수 없다 — 브라우저가 정한 선이다.
-// 대신 그때는 아직 한 일이 없으니 잃을 것도 없다.
+// 한 번도 만지지 않고 누른 뒤로가기는 지킴목으로는 막을 수 없다 — 브라우저가
+// 정한 선이다. 앱을 열자마자(배포 뒤 자동 새로고침 직후 포함) 누르면 바로 닫혔다.
+// 그 틈은 CloseWatcher 로 메운다: 조작 없이도 하나는 만들 수 있고, 뒤로가기
+// 한 번을 받아 준다. 지킴목이 서면 순서가 꼬이지 않게 곧바로 걷어낸다.
+// CloseWatcher 가 없는 브라우저에서는 예전처럼 막지 못한다.
 
 const GUARD = { biblenote: "back" };
 let guards = 0;            // 지금 쌓여 있는 지킴목 수
 let skipPops = 0;          // 우리가 스스로 되감은 것 — popstate 를 무시할 횟수
 let exitArmed = false;
 let sawInput = false;      // 손가락이 화면에 닿은 적이 있는가 (세우지는 않는다)
+let earlyWatcher = null;   // 지킴목이 서기 전 뒤로가기를 받는 CloseWatcher
 
 const activated = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
 
@@ -537,6 +541,9 @@ function syncGuards({ live = false } = {}) {
   if (live && navigator.userActivation && !navigator.userActivation.isActive) return;
   const want = layers() + 1;
   while (guards < want) { history.pushState(GUARD, ""); guards++; }
+  // 지킴목이 섰으니 첫 뒤로가기 받이는 필요 없다. 남겨 두면 뒤로가기가
+  // 시트·노트보다 먼저 이것을 닫아 순서가 꼬인다.
+  if (guards > 0 && earlyWatcher) { const w = earlyWatcher; earlyWatcher = null; w.destroy(); }
   if (guards > want) {                        // ✕ 로 닫아 남은 것은 조용히 걷어낸다
     const k = guards - want;
     guards = want;
@@ -555,6 +562,18 @@ function backStep() {
 }
 
 function initBackGuard() {
+  if ("CloseWatcher" in window && !activated()) {
+    try {
+      earlyWatcher = new CloseWatcher();
+      earlyWatcher.onclose = () => {
+        if (!earlyWatcher) return;              // 우리가 걷어낸 뒤라면 무시
+        earlyWatcher = null;
+        exitArmed = true;
+        toast("한 번 더 누르면 앱이 닫힙니다");
+      };
+    } catch { earlyWatcher = null; }
+  }
+
   addEventListener("popstate", () => {
     if (skipPops) { skipPops--; return; }     // 우리가 걷어낸 것
     if (guards > 0) guards--;
