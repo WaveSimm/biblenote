@@ -9,7 +9,7 @@ import { onSwipe } from "./swipe.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v5.10"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v5.11"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
                              // ★ v50 까지는 정수, 이후 v5.01, v5.02 … 방식 (사용자 결정, 2026-09-03)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
@@ -516,13 +516,21 @@ function toast(msg, ms = 2000) {
 // 그 틈은 CloseWatcher 로 메운다: 조작 없이도 하나는 만들 수 있고, 뒤로가기
 // 한 번을 받아 준다. 지킴목이 서면 순서가 꼬이지 않게 곧바로 걷어낸다.
 // CloseWatcher 가 없는 브라우저에서는 예전처럼 막지 못한다.
+//
+// "한 번 더 누르면" 은 알림이 떠 있는 동안만이다. 알림이 사라진 뒤 누르면 다시
+// 알림부터 떠야 한다 (사라진 뒤 누르면 바로 닫혔다). 그런데 이미 첫 뒤로가기에
+// 지킴목·받이를 다 써 버렸고, 알림이 사라지는 순간은 조작 중이 아니라 지킴목을
+// 다시 세울 수 없다. CloseWatcher 는 앞의 것이 닫혔으면 조작 없이도 새로 만들
+// 수 있으므로, 알림이 사라질 때 받이를 다시 건다.
 
 const GUARD = { biblenote: "back" };
 let guards = 0;            // 지금 쌓여 있는 지킴목 수
 let skipPops = 0;          // 우리가 스스로 되감은 것 — popstate 를 무시할 횟수
 let exitArmed = false;
 let sawInput = false;      // 손가락이 화면에 닿은 적이 있는가 (세우지는 않는다)
-let earlyWatcher = null;   // 지킴목이 서기 전 뒤로가기를 받는 CloseWatcher
+let watcher = null;        // 지킴목이 없을 때 뒤로가기를 받는 CloseWatcher
+let exitTimer = null;
+const EXIT_MS = 2000;      // "한 번 더 누르면" 이 유효한 시간 = 알림이 떠 있는 시간
 
 const activated = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
 
@@ -543,7 +551,7 @@ function syncGuards({ live = false } = {}) {
   while (guards < want) { history.pushState(GUARD, ""); guards++; }
   // 지킴목이 섰으니 첫 뒤로가기 받이는 필요 없다. 남겨 두면 뒤로가기가
   // 시트·노트보다 먼저 이것을 닫아 순서가 꼬인다.
-  if (guards > 0 && earlyWatcher) { const w = earlyWatcher; earlyWatcher = null; w.destroy(); }
+  if (guards > 0 && watcher) { const w = watcher; watcher = null; w.destroy(); }
   if (guards > want) {                        // ✕ 로 닫아 남은 것은 조용히 걷어낸다
     const k = guards - want;
     guards = want;
@@ -561,32 +569,43 @@ function backStep() {
   return false;
 }
 
+/** 지킴목이 없을 때 다음 뒤로가기 한 번을 받을 CloseWatcher 를 건다 */
+function armWatcher() {
+  if (!("CloseWatcher" in window) || watcher || guards > 0) return;
+  try {
+    const w = new CloseWatcher();
+    w.onclose = () => {
+      if (watcher !== w) return;              // 우리가 걷어낸 것
+      watcher = null;
+      askExit();
+    };
+    watcher = w;
+  } catch { watcher = null; }
+}
+
+/** 첫 뒤로가기 — 알림을 띄우고, 알림이 사라지면 다시 처음부터 */
+function askExit() {
+  exitArmed = true;
+  toast("한 번 더 누르면 앱이 닫힙니다", EXIT_MS);
+  clearTimeout(exitTimer);
+  exitTimer = setTimeout(() => { exitArmed = false; armWatcher(); }, EXIT_MS);
+}
+
 function initBackGuard() {
-  if ("CloseWatcher" in window && !activated()) {
-    try {
-      earlyWatcher = new CloseWatcher();
-      earlyWatcher.onclose = () => {
-        if (!earlyWatcher) return;              // 우리가 걷어낸 뒤라면 무시
-        earlyWatcher = null;
-        exitArmed = true;
-        toast("한 번 더 누르면 앱이 닫힙니다");
-      };
-    } catch { earlyWatcher = null; }
-  }
+  if (!activated()) armWatcher();
 
   addEventListener("popstate", () => {
     if (skipPops) { skipPops--; return; }     // 우리가 걷어낸 것
     if (guards > 0) guards--;
     if (backStep()) return;                   // 겹 하나를 닫았다. 지킴목은 이미 아래에 있다
-    if (exitArmed) return;                    // 두 번째 — 막지 않는다 (앱이 닫힌다)
-    exitArmed = true;
-    toast("한 번 더 누르면 앱이 닫힙니다");
+    if (exitArmed) return;                    // 알림이 떠 있는 동안의 두 번째 — 막지 않는다 (앱이 닫힌다)
+    askExit();
   });
 
   // 손을 뗀 뒤에, 그리고 그 조작의 결과(시트가 열렸는지 등)가 반영된 뒤에 맞춘다.
   // 그래서 capture 가 아니라 버블 단계다 — capture 로 달았더니 시트가 열리기 전
   // 상태를 보고 겹을 못 세어, 두 번째 뒤로가기가 그냥 앱을 닫았다.
-  const onGesture = () => { exitArmed = false; syncGuards(); };
+  const onGesture = () => { exitArmed = false; clearTimeout(exitTimer); syncGuards(); };
   for (const ev of ["pointerup", "touchend", "click", "keydown"])
     addEventListener(ev, onGesture, { passive: true });
 
