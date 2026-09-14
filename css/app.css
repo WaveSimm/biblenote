@@ -337,7 +337,25 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
   background: var(--bg); color: var(--fg); outline: none;
 }
 #noteMeta input:focus { border-color: var(--accent); }
-#notePreacherIn { flex: 0 0 40%; }
+/* 설교자 — 크롬 datalist 는 칸에 적힌 글자로 목록을 걸러서, 이름이 미리 채워진
+   칸에서는 ▼를 눌러도 아무것도 안 나왔다. 그래서 목록을 직접 그린다. */
+#preacherBox { flex: 0 0 40%; position: relative; display: flex; min-width: 0; }
+#preacherBox #notePreacherIn { flex: 1; }
+#preacherBox.has-list #notePreacherIn { padding-right: 34px; }
+#preacherPick {
+  position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+  width: 32px; height: 32px; padding: 0; color: var(--muted);
+}
+#preacherPick svg { width: 11px; height: 8px; fill: currentColor; display: block; margin: 0 auto; }
+#preacherMenu {
+  position: absolute; z-index: 40; top: calc(100% + 4px); right: 0; min-width: 100%;
+  max-height: 50vh; overflow-y: auto; margin: 0; padding: 4px 0; list-style: none;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.18);
+}
+#preacherMenu li { padding: 11px 14px; font-size: 15px; white-space: nowrap; cursor: pointer; }
+#preacherMenu li.on { font-weight: 700; color: var(--accent); }
+#preacherMenu li:active { background: var(--chip-bg); }
 
 /* 편집기 — 투명 textarea 뒤에 색칠한 사본을 겹친다.
    두 층의 글꼴·크기·줄간격·여백·줄바꿈 규칙이 하나라도 다르면 글자가 어긋난다. */

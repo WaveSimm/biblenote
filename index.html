@@ -92,8 +92,13 @@
   </header>
   <div id="noteMeta">
     <input id="noteTitle" type="text" placeholder="제목 (없어도 됩니다)" autocomplete="off">
-    <input id="notePreacherIn" type="text" placeholder="설교자" list="preacherList" autocomplete="off">
-    <datalist id="preacherList"></datalist>
+    <div id="preacherBox">
+      <input id="notePreacherIn" type="text" placeholder="설교자" autocomplete="off">
+      <button class="iconbtn" id="preacherPick" title="설교자 목록" aria-label="설교자 목록" aria-expanded="false" hidden>
+        <svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5h10L6 7z"/></svg>
+      </button>
+      <ul id="preacherMenu" role="listbox" hidden></ul>
+    </div>
   </div>
   <div id="noteEditor">
     <div id="noteHL" aria-hidden="true"></div>

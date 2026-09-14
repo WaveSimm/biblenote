@@ -124,6 +124,8 @@ export function initNoteEdit(h) {
     if (e.key === "Enter") { e.preventDefault(); e.target.blur(); }
   });
 
+  initPreacherMenu();
+
   $("noteBack").onclick = closeNote;
   $("notePassage").onclick = () => { if (anchors[0]) gotoAnchor(anchors[0]); };
   $("noteToBible").onclick = () => toBible();
@@ -181,6 +183,7 @@ export function closeNote() {
   note = null;
   $("noteView").hidden = true;
   $("noteReturn").hidden = true;
+  showPreacherMenu(false);
   document.body.classList.remove("noting");
   if (hooks.markDraft) hooks.markDraft([]);
   if (hooks.showBible) hooks.showBible();
@@ -257,12 +260,43 @@ function lastPreacher() {
   return list.length ? list[0] : "";      // 가장 자주 나온 사람이 기본값
 }
 
+// 목록이 있을 때만 ▼를 보인다
 function fillPreachers() {
-  const dl = $("preacherList");
-  dl.replaceChildren();
-  for (const p of preacherList()) {
-    const o = document.createElement("option");
-    o.value = p;
-    dl.append(o);
+  const has = preacherList().length > 0;
+  $("preacherPick").hidden = !has;
+  $("preacherBox").classList.toggle("has-list", has);
+  showPreacherMenu(false);
+}
+
+function showPreacherMenu(open) {
+  const menu = $("preacherMenu");
+  if (open) {
+    const cur = $("notePreacherIn").value.trim();
+    menu.replaceChildren(...preacherList().map((p) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "option");
+      li.textContent = p;                       // 사용자가 쓴 글자 — innerHTML 을 쓰지 않는다
+      if (p === cur) li.className = "on";
+      return li;
+    }));
   }
+  menu.hidden = !open;
+  $("preacherPick").setAttribute("aria-expanded", String(open));
+}
+
+function initPreacherMenu() {
+  // 필터 없이 전부, 자주 쓴 순. 칸에 적힌 이름과 상관없이 늘 전체를 보인다.
+  $("preacherPick").onclick = () => showPreacherMenu($("preacherMenu").hidden);
+  $("preacherMenu").addEventListener("click", (e) => {
+    const li = e.target.closest("li");
+    if (!li) return;
+    $("notePreacherIn").value = li.textContent;
+    showPreacherMenu(false);
+    schedSave();
+  });
+  // 바깥을 누르거나 칸에 직접 쓰기 시작하면 닫는다
+  document.addEventListener("pointerdown", (e) => {
+    if (!$("preacherMenu").hidden && !e.target.closest("#preacherBox")) showPreacherMenu(false);
+  });
+  $("notePreacherIn").addEventListener("input", () => showPreacherMenu(false));
 }
