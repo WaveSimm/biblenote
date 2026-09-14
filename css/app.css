@@ -78,8 +78,13 @@ body {
 /* 절 ◂ / 장 ◂◂ — SVG 로 그린다. 글자(◂◂)는 기기 글꼴에 따라 두 삼각형이 겹쳐 하나로 보였다 */
 .iconbtn.nav svg { height: 13px; width: auto; fill: currentColor; display: block; margin: 0 auto; }
 .iconbtn.hist { font-size: 19px; color: var(--fg); padding: 11px 4px; min-width: 32px; }
-/* 이동 기록 버튼은 비활성일 때도 자리와 형태가 보이도록 */
-.iconbtn.hist:disabled { opacity: .32; }
+/* 이동 기록 ↶ ↷ — SVG 굵은 획. 글자(↶)는 획이 가늘어 잘 안 보였고
+   활성/비활성 차이도 드러나지 않았다. 활성은 본문색, 비활성은 자리만 남기는 연한 색 */
+.iconbtn.hist svg {
+  width: 21px; height: 21px; display: block; margin: 0 auto;
+  fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+}
+.iconbtn.hist:disabled { opacity: .22; }
 /* 장 이동 아이콘 바깥에 살짝 띄워 붙여 내비게이션 묶음으로 보이게 */
 #btnBack { margin-right: 6px; }
 #btnFwd { margin-left: 6px; }
