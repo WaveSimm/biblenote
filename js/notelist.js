@@ -56,13 +56,17 @@ function row(n) {
   tit.className = "nl-title";
   tit.textContent = n.title || firstLine(n) || "(제목 없음)";
 
-  main.append(pas, tit);
+  // 첫 줄: 본문(왼쪽) · 설교자(오른쪽) — 설교자에 한 줄을 따로 쓰지 않는다
+  const head = document.createElement("span");
+  head.className = "nl-head";
+  head.append(pas);
   if (n.preacher) {
     const p = document.createElement("span");
     p.className = "nl-preacher";
     p.textContent = n.preacher;
-    main.append(p);
+    head.append(p);
   }
+  main.append(head, tit);
 
   if (n.tags && n.tags.length) main.append(tagChips(n.tags));
 

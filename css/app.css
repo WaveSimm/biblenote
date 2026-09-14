@@ -516,7 +516,8 @@ span.v.draft > .vh { color: var(--accent); font-weight: 600; }
 .nl-day i { display: block; font-size: 11px; font-weight: 400; font-style: normal; color: var(--muted); }
 .nl-main { flex: 1; min-width: 0; }
 /* 본문이 제목보다 위 — 노트는 본문에 매달린다 */
-.nl-passage { display: block; font-size: 13px; font-weight: 600; color: var(--accent); }
+.nl-head { display: flex; align-items: baseline; gap: 8px; }
+.nl-passage { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--accent); }
 .nl-service {
   font-style: normal; font-size: 11px; font-weight: 400; color: var(--muted);
   margin-left: 6px;
@@ -525,7 +526,7 @@ span.v.draft > .vh { color: var(--accent); font-weight: 600; }
   display: block; font-size: 14px; line-height: 1.45; margin-top: 1px;
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-.nl-preacher { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; text-align: right; }
+.nl-preacher { flex: 0 0 auto; font-size: 11px; color: var(--muted); white-space: nowrap; }
 .nl-more { font-size: 12px; color: var(--muted); padding: 12px 2px; text-align: center; }
 
 /* 태그 표시 — 목록과 절 노트에서 */
