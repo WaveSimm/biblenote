@@ -9,7 +9,7 @@ import { onSwipe } from "./swipe.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v5.03"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v5.04"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
                              // ★ v50 까지는 정수, 이후 v5.01, v5.02 … 방식 (사용자 결정, 2026-09-03)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
@@ -382,11 +382,34 @@ function syncBarMetrics() {
   TOP_OFFSET = th + 8;
 }
 
-function updateLoc(ref) {
+function updateLoc(ref, force = false) {
   // 책 이름이 길면 약칭으로 — 좁은 상단 바에서 장·절이 잘리지 않게
   const m = bookMeta(ref.b);
   const name = m.ko.length >= 5 ? m.abbr : m.ko;
-  $("loc").textContent = `${name} ${ref.c}:${ref.v}`;
+  const el = $("loc");
+  const full = `${name} ${ref.c}:${ref.v}`;
+  if (!force && el.dataset.full === full) return;   // 스크롤 중 같은 절이면 배치 계산을 건너뛴다
+  el.dataset.full = full;
+  el.dataset.abbr = `${m.abbr} ${ref.c}:${ref.v}`;
+  el.textContent = full;
+  fitLoc();
+}
+
+// 위치 글자는 절대 말줄임(…)하지 않는다 — 넘치면 약칭으로, 그래도 넘치면 글자를 줄인다.
+// 큰 글자 설정 기기(뷰포트 ~340px)에서는 가운데 폭이 130px 남짓이다.
+function fitLoc() {
+  const el = $("loc");
+  el.style.fontSize = "";
+  if (!el.clientWidth || el.scrollWidth <= el.clientWidth) return;   // 아직 배치 전이면 건드리지 않는다
+  if (el.textContent !== el.dataset.abbr) {
+    el.textContent = el.dataset.abbr;
+    if (el.scrollWidth <= el.clientWidth) return;
+  }
+  let fs = parseFloat(getComputedStyle(el).fontSize);
+  while (el.scrollWidth > el.clientWidth && fs > 9) {
+    fs -= 0.5;
+    el.style.fontSize = fs + "px";
+  }
 }
 
 function addRecentBook(b) {
@@ -857,6 +880,7 @@ async function main() {
   addEventListener("resize", () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
+      updateLoc(curRef, true);   // 폭이 바뀌면 이름·글자 크기를 다시 맞춘다
       syncBarMetrics();
       paneA.scrollToVerse(curRef.b, curRef.c, curRef.v);
       if (settings.mode === "compare") paneB.scrollToVerse(curRef.b, curRef.c, curRef.v);

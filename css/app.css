@@ -65,7 +65,8 @@ body {
   background: none; border: none; cursor: pointer; border-radius: 10px;
   font-size: 17px; font-weight: 600; color: var(--fg);
   padding: 10px 4px; margin: 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+  /* 말줄임 금지 — 넘치면 fitLoc()이 약칭·글자 크기로 맞춘다 */
+  white-space: nowrap; overflow: hidden; min-width: 0;
   /* 가운데 영역을 남은 폭 전부로 고정 — 위치 글자 길이가 바뀌어도 양옆 버튼은 바 끝에 붙어 움직이지 않는다 */
   flex: 1 1 0; text-align: center;
 }
