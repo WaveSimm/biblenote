@@ -344,7 +344,8 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 #noteEditor { position: relative; flex: 1; min-height: 0; }
 #noteHL, #noteText {
   position: absolute; inset: 0;
-  margin: 0; border: 0; padding: 12px 14px;
+  /* 아래 여백은 떠 있는 '성경 ⇄' 단추 몫 — 마지막 줄을 단추 위로 올려 쓸 수 있게 */
+  margin: 0; border: 0; padding: 12px 14px 72px;
   font-family: "Noto Sans KR", -apple-system, sans-serif;
   font-size: 16px; line-height: 1.75;
   white-space: pre-wrap; overflow-wrap: break-word; word-break: break-word;
@@ -381,17 +382,20 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
   flex: 1 1 auto; min-width: 90px;
 }
 #noteTags:focus { border-color: var(--accent); }
+/* 성경 ⇄ 노트 — 양쪽 모두 같은 모양의 떠 있는 단추 (본문 오른쪽 아래) */
 #noteToBible, #noteReturn {
-  border: 1px solid var(--line); background: var(--chip-bg); color: var(--fg);
+  border: 1px solid var(--chip-on); background: var(--chip-on); color: var(--chip-on-fg);
   border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 600;
-  cursor: pointer; font-family: inherit;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,.22);
 }
-/* 성경 쪽에서 노트로 돌아가는 단추 */
+/* 노트 → 성경: 편집기 영역 안에 띄운다. 편집기는 키보드가 올라오면 함께 줄어드므로
+   단추도 늘 키보드 바로 위(태그 줄 위)에 남는다 */
+#noteToBible { position: absolute; z-index: 2; right: 12px; bottom: 16px; }
+/* 성경 → 노트 */
 #noteReturn {
   position: fixed; z-index: 30;
   right: 12px; bottom: calc(var(--bottombar-h, 56px) + env(safe-area-inset-bottom) + 16px);
-  box-shadow: 0 4px 16px rgba(0,0,0,.22);
-  background: var(--chip-on); color: var(--chip-on-fg); border-color: var(--chip-on);
 }
 
 /* 이동 시트의 노트 단추 */
