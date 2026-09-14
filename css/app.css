@@ -74,7 +74,8 @@ body {
   font-size: 20px; line-height: 1; color: var(--muted);
   padding: 11px 4px; min-width: 36px; border-radius: 10px;
 }
-.iconbtn.nav .dbl { letter-spacing: -0.3em; display: inline-block; margin-right: 0.3em; }
+/* 절 ◂ / 장 ◂◂ — SVG 로 그린다. 글자(◂◂)는 기기 글꼴에 따라 두 삼각형이 겹쳐 하나로 보였다 */
+.iconbtn.nav svg { height: 13px; width: auto; fill: currentColor; display: block; margin: 0 auto; }
 .iconbtn.hist { font-size: 19px; color: var(--fg); padding: 11px 4px; min-width: 32px; }
 /* 이동 기록 버튼은 비활성일 때도 자리와 형태가 보이도록 */
 .iconbtn.hist:disabled { opacity: .32; }
