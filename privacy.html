@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BibleNote — 개인정보처리방침</title>
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/page.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>개인정보처리방침</h1>
+    <p class="lead">BibleNote · 시행일 2026년 9월 15일</p>
+  </header>
+
+  <section>
+    <h2>요약</h2>
+    <ul>
+      <li>BibleNote에는 <strong>서버가 없습니다.</strong> 앱 운영자는 사용자의 노트나 개인정보를 받지도, 보관하지도 않습니다.</li>
+      <li>노트는 사용자의 기기에 저장되고, 구글 드라이브 동기화를 켜면 <strong>사용자 본인의 구글 드라이브</strong>에도 저장됩니다.</li>
+      <li>앱은 드라이브에서 <strong>자신이 만든 파일 하나에만</strong> 접근합니다.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>1. 기기에 저장되는 정보</h2>
+    <p>설교노트, 읽던 위치, 화면 설정, 받아 둔 성경 본문은 사용하는 브라우저의 저장소(localStorage·캐시)에 저장됩니다.
+      이 정보는 그 기기를 벗어나지 않으며, 브라우저의 사이트 데이터를 지우면 함께 지워집니다.</p>
+  </section>
+
+  <section>
+    <h2>2. 구글 드라이브 동기화 (선택 기능)</h2>
+    <p>설정에서 <strong>구글 드라이브 연결</strong>을 누른 경우에만 동작합니다.</p>
+    <h3>접근하는 구글 사용자 데이터</h3>
+    <ul>
+      <li><strong>구글 드라이브 파일 (권한 <code>drive.file</code>)</strong> — 앱이 사용자 드라이브에 만든
+        <code>biblenote-notes.json</code> 파일을 만들고, 읽고, 고칩니다. 이 권한으로는 사용자가 앱에서 직접 만들지 않은
+        다른 드라이브 파일에 접근할 수 없습니다.</li>
+      <li><strong>구글 계정 이메일 주소</strong> — 어떤 계정에 연결됐는지 설정 화면에 보여 주기 위해 드라이브에서 읽습니다.
+        그 기기의 브라우저 저장소에만 남습니다.</li>
+    </ul>
+    <h3>사용 방법</h3>
+    <ul>
+      <li>파일에는 사용자의 노트와, 지운 노트를 다른 기기에서도 지우기 위한 표시(노트 id와 지운 시각)가 담깁니다.</li>
+      <li>데이터는 사용자의 브라우저와 구글 드라이브 사이에서만 오갑니다. 앱 운영자나 제3자에게 전송·판매·공유하지 않으며,
+        광고나 분석, 인공지능 학습에 쓰지 않습니다.</li>
+      <li>구글 로그인으로 받은 접근 토큰(유효 1시간)은 그 기기의 브라우저 저장소에만 둡니다.</li>
+    </ul>
+    <p>BibleNote가 Google API로부터 받은 정보를 사용하고 다른 앱으로 전송하는 방식은
+      <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API 서비스 사용자 데이터 정책</a>의
+      제한적 사용(Limited Use) 요구사항을 포함하여 해당 정책을 준수합니다.</p>
+  </section>
+
+  <section>
+    <h2>3. 연결 해제와 삭제</h2>
+    <ul>
+      <li>앱 설정의 <strong>해제</strong>를 누르면 접근 토큰을 폐기하고 연결 정보를 지웁니다. 기기의 노트와 드라이브의 파일은 남습니다.</li>
+      <li>드라이브의 노트 파일은 구글 드라이브에서 <code>biblenote-notes.json</code>을 직접 삭제하면 지워집니다.</li>
+      <li>앱에 준 권한은 <a href="https://myaccount.google.com/connections" target="_blank" rel="noopener">구글 계정 → 서드파티 연결</a>에서도 거둘 수 있습니다.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>4. 외부 서비스</h2>
+    <p>앱을 여는 과정에서 다음 서비스에 사용자의 브라우저가 직접 접속하며, 각 서비스는 자체 방침에 따라 접속 기록(IP 주소 등)을 처리할 수 있습니다.</p>
+    <ul>
+      <li>GitHub Pages — 앱 파일 제공</li>
+      <li>Google Fonts — 글꼴 제공</li>
+      <li>Google 로그인·Google Drive API — 동기화를 켠 경우</li>
+    </ul>
+    <p>BibleNote는 쿠키, 광고, 방문 분석 도구를 쓰지 않습니다.</p>
+  </section>
+
+  <section>
+    <h2>5. 문의와 변경</h2>
+    <p>문의: <a href="mailto:yunsim@gmail.com">yunsim@gmail.com</a></p>
+    <p>이 방침이 바뀌면 이 페이지에 시행일과 함께 게시합니다.</p>
+  </section>
+
+  <footer><a href="about.html">앱 소개</a> · <a href="./">BibleNote 열기</a></footer>
+</main>
+</body>
+</html>

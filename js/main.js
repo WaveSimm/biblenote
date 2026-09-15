@@ -4,12 +4,13 @@ import { loadSettings, saveSettings, loadHistory, saveHistory } from "./store.js
 import { renderOffline } from "./offline.js";
 import { initFind, openFind } from "./search.js";
 import * as Notes from "./notes.js";
-import { initNoteEdit, openNote, isEditing, resumeNote } from "./noteedit.js";
+import { initNoteEdit, openNote, isEditing, resumeNote, editingId } from "./noteedit.js";
 import { onSwipe } from "./swipe.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
+import { initDriveSync, paintDrive } from "./drivesync.js";
 
-const APP_VERSION = "v5.13"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v5.14"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
                              // ★ v50 까지는 정수, 이후 v5.01, v5.02 … 방식 (사용자 결정, 2026-09-03)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
@@ -858,7 +859,15 @@ async function main() {
     jump: (ref) => { closeAll(); jumpTo(ref); },     // 관주 탭 → 이동, 뒤로가기로 복귀
     version: () => active.version,                   // 미리보기는 지금 읽는 번역본으로
   });
-  initNotesIO({ onImported: remarkAllNoted });
+  initNotesIO({ onImported: remarkAllNoted, editingId });
+  // 드라이브에서 받은 노트가 바뀌면 절 표시·용량을 다시 그린다 (설교노트 설계 §12)
+  const drive = initDriveSync({
+    editingId,
+    onChanged: () => { remarkAllNoted(); paintUsage(); },
+    toast,
+  });
+  // 토큰이 만료돼 못 올린 변경이 남아 있으면 한 번 알린다 (구글 창은 누를 때만 뜰 수 있다)
+  if (drive.needsTap) toast("올리지 못한 노트 변경이 있습니다 — 설정 Aa 에서 [동기화]", 4000);
 
   // 화면 꺼짐 방지 — 성경을 펴 둔 동안은 책처럼 화면이 살아 있어야 한다.
   // 잠금은 화면을 벗어나면 시스템이 자동 해제하므로, 돌아올 때마다 다시 건다.
@@ -912,7 +921,7 @@ async function main() {
     const ref = active.topRef() || curRef;
     openNote({ ref, label: refLabel(ref, { abbr: true }).replace(" ", "") });
   };
-  $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); renderOffline(); paintUsage(); };
+  $("btnSettings").onclick = () => { syncSegs(); openSheet($("sheetSettings")); renderOffline(); paintUsage(); paintDrive(); };
   $("backdrop").onclick = closeAll;
   // 닫기 단추가 어떤 이유로든 안 눌릴 때를 대비한 탈출구
   addEventListener("keydown", (e) => { if (e.key === "Escape") closeAll(); });

@@ -1,0 +1,30 @@
+/* 소개·개인정보처리방침 페이지 — 앱과 같은 색 */
+:root {
+  --bg: #faf8f4; --fg: #2b2a26; --muted: #7d786e; --line: #e6e2d8; --accent: #7a6a4f; --card: #fff;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #17181c; --fg: #d8d4ca; --muted: #8f8c84; --line: #2b2c31; --accent: #b0a184; --card: #1f2025; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.75 "Noto Sans KR", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  padding: 0 16px;
+}
+main { max-width: 40em; margin: 0 auto; padding: 40px 0 56px; }
+header { text-align: center; margin-bottom: 32px; }
+header img { border-radius: 14px; }
+h1 { font-size: 1.7em; margin: 10px 0 4px; letter-spacing: -.01em; }
+.lead { color: var(--muted); margin: 0; }
+section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+h2 { font-size: 1.1em; margin: 0 0 8px; color: var(--accent); }
+h3 { font-size: 1em; margin: 14px 0 4px; }
+ul { padding-left: 1.2em; margin: 6px 0; }
+li { margin: 4px 0; }
+p { margin: 6px 0; }
+code { font-size: .88em; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 0 4px; overflow-wrap: anywhere; }
+a { color: var(--accent); }
+.go { text-align: center; margin: 28px 0; }
+.btn { display: inline-block; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 600; border-radius: 12px; padding: 10px 26px; }
+footer { text-align: center; color: var(--muted); font-size: .88em; margin-top: 28px; }

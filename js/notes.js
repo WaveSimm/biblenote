@@ -7,14 +7,21 @@
 //
 // 색인은 절 하나하나에 건다. 앵커가 롬8:28-30 이면 28·29·30 세 자리에 모두
 // 걸어야 29절을 읽을 때도 노트가 뜬다.
+//
+// 지운 노트는 흔적(tombstone)을 남긴다 — 다른 기기와 합칠 때 되살아나지 않게
+// (설교노트 설계 §12.4). 흔적은 노트 배열과 따로 두어 목록·색인·검색은 모른다.
 
 import { buildNoteRefs, resolveAnchors } from "./noteref.js";
 
 const KEY = "biblenote.notes.v1";
+const GONE_KEY = "biblenote.notes.gone.v1";
+const GONE_KEEP = 180 * 24 * 3600 * 1000;   // 흔적은 180일 뒤 버린다 — 그보다 오래 안 켠 기기는 드물다
 
 let notes = [];                  // Note[]
 let byId = new Map();
 let byVerse = new Map();         // "b:c:v" -> Note[]
+let gone = new Map();            // id -> deletedAt (지운 노트의 흔적)
+let listener = null;             // 로컬에서 노트가 바뀌면 부른다 (드라이브 동기화)
 
 const vkey = (b, c, v) => `${b}:${c}:${v}`;
 const uid = () => "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -75,7 +82,12 @@ function isStub(n) {
 
 function pruneStubs() {
   const before = notes.length;
-  notes = notes.filter((n) => !isStub(n));
+  const now = Date.now();
+  notes = notes.filter((n) => {
+    if (!isStub(n)) return true;
+    gone.set(n.id, now);
+    return false;
+  });
   lastPruned = before - notes.length;
   return lastPruned;
 }
@@ -88,15 +100,27 @@ export function initNotes(books) {
   } catch {
     notes = [];
   }
+  gone = readGone();
   for (const n of notes) if (!n.anchors) refresh(n);
-  if (pruneStubs()) persist();
+  if (pruneStubs()) persist({ quiet: true });
   reindex();
   return notes.length;
 }
 
-function persist() {
+function readGone() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(GONE_KEY) || "{}");
+    return new Map(Object.entries(raw).filter(([, t]) => Date.now() - t < GONE_KEEP));
+  } catch {
+    return new Map();
+  }
+}
+
+function persist({ quiet = false } = {}) {
   try {
     localStorage.setItem(KEY, JSON.stringify(notes));
+    localStorage.setItem(GONE_KEY, JSON.stringify(Object.fromEntries(gone)));
+    if (!quiet && listener) listener();
     return true;
   } catch (e) {
     // 한도를 넘었거나 사생활 모드 — 조용히 실패하면 안 되는 유일한 곳이다
@@ -137,6 +161,7 @@ export function put(note) {
   refresh(note);
   note.updatedAt = Date.now();
   if (!note.createdAt) note.createdAt = note.updatedAt;
+  gone.delete(note.id);
   const i = notes.findIndex((x) => x.id === note.id);
   if (i >= 0) notes[i] = note; else notes.push(note);
   notes.sort(byNewest);
@@ -149,6 +174,7 @@ export function remove(id) {
   const i = notes.findIndex((x) => x.id === id);
   if (i < 0) return false;
   notes.splice(i, 1);
+  gone.set(id, Date.now());
   reindex();
   persist();
   return true;
@@ -167,31 +193,96 @@ export function search(query) {
 
 /* ---------- 가져오기·내보내기 ---------- */
 
-/** 마이그레이션 데이터 주입. 같은 id 는 건너뛴다. */
-export function importNotes(arr, { imported = true } = {}) {
-  let added = 0;
-  for (const raw of arr) {
-    const n = { ...raw };
-    if (!n.id) n.id = uid();          // id 는 부르는 쪽에서 정해 오는 게 낫다 (다시 가져와도 늘지 않게)
-    if (byId.has(n.id)) continue;
-    // createdAt 이 있으면 앱을 거친 노트다(내보내기 왕복) — 제 플래그를 믿는다.
-    // 없으면 도구가 만든 마이그레이션 파일이라 여기서 옮겨온 표시를 단다.
-    if (imported && !n.createdAt) n.imported = true;
-    if (typeof n.body !== "string") n.body = (n.body || []).join("\n");
-    refresh(n);
-    n.createdAt = n.createdAt || Date.parse(n.date) || Date.now();
-    n.updatedAt = n.updatedAt || n.createdAt;
-    notes.push(n);
-    byId.set(n.id, n);
-    added++;
-  }
-  notes.sort(byNewest);
-  reindex();
-  persist();
-  return added;
+/** 들어온 노트를 저장소 모양으로 — 앵커를 다시 계산하고 빠진 필드를 채운다 */
+function adopt(raw, imported) {
+  const n = { ...raw };
+  if (!n.id) n.id = uid();          // id 는 부르는 쪽에서 정해 오는 게 낫다 (다시 가져와도 늘지 않게)
+  // createdAt 이 있으면 앱을 거친 노트다(내보내기 왕복) — 제 플래그를 믿는다.
+  // 없으면 도구가 만든 마이그레이션 파일이라 여기서 옮겨온 표시를 단다.
+  if (imported && !n.createdAt) n.imported = true;
+  if (typeof n.body !== "string") n.body = (n.body || []).join("\n");
+  refresh(n);
+  n.createdAt = n.createdAt || Date.parse(n.date) || Date.now();
+  n.updatedAt = n.updatedAt || n.createdAt;
+  return n;
 }
 
-export function exportNotes() { return JSON.stringify(notes, null, 2); }
+// 한 id 의 상태: { note, t } (살아 있음, t = updatedAt) 또는 { dead: true, t } (지움, t = deletedAt)
+const later = (x, y) => (!x ? y : !y ? x : y.t > x.t ? y : x);   // 같으면 앞(이쪽)이 이긴다
+const same = (x, y) => !!x && !!y && x.t === y.t && !!x.dead === !!y.dead;
+
+/**
+ * 다른 곳(파일·드라이브)에서 온 노트·흔적을 합친다. 규칙은 하나 —
+ * 같은 id 끼리는 나중에 바뀐 쪽이 이긴다 (노트는 updatedAt, 흔적은 deletedAt).
+ * 지운 뒤에 다른 기기에서 고쳤다면 고친 쪽이 살아난다.
+ *
+ *   incoming : { notes: Note[], gone: { id: deletedAt } }
+ *   skip     : 건드리지 않을 id — 지금 편집 중인 노트 (쓰는 도중 글자가 바뀌면 안 된다)
+ *   imported : createdAt 없는 노트에 '옮겨온 노트' 표시를 단다 (마이그레이션 파일)
+ *   quiet    : 바뀜 알림을 부르지 않는다 (동기화가 스스로 부른 합치기)
+ *
+ * 돌려주는 값 { added, updated, removed, behind }
+ *   behind = 합친 결과가 들어온 것과 다르다 — 저쪽(드라이브)에 다시 올려야 한다
+ */
+export function merge(incoming, { skip = null, imported = false, quiet = false } = {}) {
+  const now = Date.now();
+  const theirs = new Map();
+  for (const raw of incoming.notes || []) {
+    if (!raw) continue;
+    const n = adopt(raw, imported);
+    theirs.set(n.id, later(theirs.get(n.id), { note: n, t: n.updatedAt }));
+  }
+  for (const [id, t] of Object.entries(incoming.gone || {}))
+    if (now - t < GONE_KEEP) theirs.set(id, later(theirs.get(id), { dead: true, t }));
+
+  const r = { added: 0, updated: 0, removed: 0, behind: false };
+  let goneChanged = false;
+  const ids = new Set([...byId.keys(), ...gone.keys(), ...theirs.keys()]);
+  for (const id of ids) {
+    const mn = byId.get(id);
+    const mine = later(mn && { note: mn, t: mn.updatedAt }, gone.has(id) ? { dead: true, t: gone.get(id) } : null);
+    const their = theirs.get(id);
+    const win = id === skip && mine ? mine : later(mine, their);
+    if (!same(win, their)) r.behind = true;
+    if (win === mine || same(win, mine)) {
+      // 이쪽이 이겼다. 흔적과 노트가 둘 다 있던 id 라면 진 쪽을 치운다.
+      if (win.dead && mn) { notes.splice(notes.indexOf(mn), 1); byId.delete(id); r.removed++; }
+      if (!win.dead && gone.delete(id)) goneChanged = true;
+      continue;
+    }
+    if (win.dead) {
+      if (mn) { notes.splice(notes.indexOf(mn), 1); byId.delete(id); r.removed++; }
+      gone.set(id, win.t);
+      goneChanged = true;
+    } else {
+      if (mn) { notes[notes.indexOf(mn)] = win.note; r.updated++; }
+      else { notes.push(win.note); r.added++; }
+      byId.set(id, win.note);
+      gone.delete(id);
+    }
+  }
+
+  if (r.added || r.updated || r.removed) {
+    notes.sort(byNewest);
+    reindex();
+  }
+  if (r.added || r.updated || r.removed || goneChanged) persist({ quiet });
+  return r;
+}
+
+/** 파일에서 온 노트 주입. 같은 id 는 더 최근에 고친 쪽이 남는다. 새로 들어온 수를 돌려준다. */
+export function importNotes(arr, { imported = true, gone: incomingGone = {} } = {}) {
+  return merge({ notes: arr, gone: incomingGone }, { imported }).added;
+}
+
+/** 내보내기·동기화 파일 — 노트와 흔적 */
+export function snapshot() {
+  return { app: "biblenote", version: 2, notes, gone: Object.fromEntries(gone) };
+}
+export function exportNotes() { return JSON.stringify(snapshot(), null, 2); }
+
+/** 로컬에서 노트가 바뀔 때마다 부를 함수 하나 (드라이브 동기화가 등록한다) */
+export function onLocalChange(fn) { listener = fn; }
 
 /** 저장 용량 상황 — 설정 화면에서 보여 준다 */
 export function usage() {

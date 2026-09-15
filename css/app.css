@@ -500,6 +500,14 @@ span.v.draft > .vh { color: var(--accent); font-weight: 600; }
 #ioStat.io-ok { color: var(--accent); }
 #ioStat.io-bad { color: #c0392b; }
 [data-theme="dark"] #ioStat.io-bad { color: #e08070; }
+/* 구글 드라이브 동기화 (설교노트 설계 §12.6) */
+.io-btn:disabled { opacity: .55; cursor: default; }
+.io-btn.io-off { flex: 0 0 auto; padding: 10px 16px; font-weight: 400; color: var(--muted); }
+#driveStat { font-size: 12px; margin-top: 8px; min-height: 1.2em; color: var(--muted); overflow-wrap: anywhere; }
+#driveStat.io-bad { color: #c0392b; }
+[data-theme="dark"] #driveStat.io-bad { color: #e08070; }
+.io-links { font-size: 11px; margin-top: 6px; color: var(--faint); }
+.io-links a { color: var(--muted); }
 
 /* 검색 시트의 성경/노트 탭 */
 #segFindTab { margin-right: auto; }

@@ -190,6 +190,8 @@ export function closeNote() {
 }
 
 export const isEditing = () => !!note;
+/** 편집 중인 노트의 id — 동기화·가져오기가 이 노트는 건드리지 않는다 (새 노트는 아직 id 가 없다) */
+export const editingId = () => (note && note.id) || null;
 
 /** 성경 화면에서 스와이프로 돌아올 때 — 쓰던 노트가 있으면 그리로 (커서 그대로) */
 export function resumeNote() { if (note) toNote(); }

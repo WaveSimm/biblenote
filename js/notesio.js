@@ -58,22 +58,26 @@ async function importFile(file) {
   if (!file) return;
   $("ioStat").textContent = "읽는 중…";
   try {
-    const arr = JSON.parse(await file.text());
-    if (!Array.isArray(arr)) return bad("노트 배열이 아닙니다");
+    // 두 모양을 받는다 — 노트 배열(마이그레이션 파일·v5.13 이전 내보내기),
+    // { notes, gone } (v5.14 부터 내보내기 — 지운 노트의 흔적까지 담는다)
+    const data = JSON.parse(await file.text());
+    const arr = Array.isArray(data) ? data : data && Array.isArray(data.notes) ? data.notes : null;
+    if (!arr) return bad("노트 파일이 아닙니다");
+    const gone = (!Array.isArray(data) && data.gone) || {};
 
     const good = arr.filter((n) => n && n.date && (n.body || n.title));
-    if (!good.length) return bad("가져올 노트가 없습니다");
+    if (!good.length && !Object.keys(gone).length) return bad("가져올 노트가 없습니다");
 
-    const before = Notes.all().length;
-    const added = Notes.importNotes(good.map(normalize));
-    const dup = good.length - added;
-
-    ok(`${added}개 들여왔습니다` +
-       (dup ? ` (이미 있던 ${dup}개는 건너뜀)` : "") +
-       (good.length < arr.length ? ` · 형식이 안 맞는 ${arr.length - good.length}개 제외` : ""));
+    const r = Notes.merge({ notes: good.map(normalize), gone }, { imported: true, skip: hooks.editingId?.() });
+    const parts = [];
+    if (r.added) parts.push(`${r.added}개 들여옴`);
+    if (r.updated) parts.push(`${r.updated}개 새 내용으로 바꿈`);
+    if (r.removed) parts.push(`${r.removed}개 지움`);
+    if (good.length < arr.length) parts.push(`형식이 안 맞는 ${arr.length - good.length}개 제외`);
+    if (r.added || r.updated || r.removed) ok(parts.join(" · "));
+    else bad("모두 이미 있던 노트입니다");
     paintUsage();
     if (hooks.onImported) hooks.onImported();
-    if (Notes.all().length === before) bad("모두 이미 있던 노트입니다");
   } catch (e) {
     bad("읽지 못했습니다 — " + (e.message || e));
   }
