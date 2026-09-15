@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BibleNote 사용 설명서</title>
+<meta name="description" content="BibleNote 사용 설명서 — 성경 읽기, 번역본 비교, 설교노트 쓰기, 폰·PC 노트 맞추기">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/page.css">
+<style>
+  .toc { columns: 2; column-gap: 18px; padding-left: 1.2em; }
+  .toc li { break-inside: avoid; }
+  @media (max-width: 480px) { .toc { columns: 1; } }
+  figure.shot { display: grid; grid-template-columns: minmax(0, 260px) 1fr; gap: 18px; align-items: start; margin: 14px 0 6px; }
+  figure.shot img { width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 2px 10px rgba(0,0,0,.08); background: #fff; }
+  figure.shot figcaption { font-size: .95em; }
+  @media (max-width: 560px) {
+    figure.shot { grid-template-columns: 1fr; }
+    figure.shot img { max-width: 300px; justify-self: center; }
+  }
+  ol.marks { list-style: none; padding: 0; margin: 4px 0; }
+  ol.marks li { display: grid; grid-template-columns: 26px 1fr; gap: 6px; margin: 5px 0; }
+  ol.marks li > b {
+    width: 22px; height: 22px; border-radius: 50%; background: #d6452f; color: #fff;
+    font: 700 12px/22px sans-serif; text-align: center; margin-top: 3px;
+  }
+  .tip { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; margin: 10px 0; color: var(--fg); }
+  pre.ex { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; overflow-x: auto; font-size: .92em; line-height: 1.7; margin: 8px 0; }
+  pre.ex .r { color: #2f6db0; font-weight: 600; }
+  pre.ex .p { color: var(--accent); font-weight: 600; }
+  pre.ex .c { color: var(--muted); }
+  kbd { font: inherit; font-size: .9em; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 0 5px; background: var(--card); white-space: nowrap; }
+  section h2 { scroll-margin-top: 12px; }
+  details { margin: 6px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="icons/icon-192.png" alt="" width="56" height="56">
+    <h1>BibleNote 사용 설명서</h1>
+    <p class="lead">성경을 읽고, 설교노트를 그 구절에 매달아 두는 앱</p>
+  </header>
+
+  <section>
+    <h2>차례</h2>
+    <ol class="toc">
+      <li><a href="#install">폰에 설치하기</a></li>
+      <li><a href="#read">읽기 화면의 단추</a></li>
+      <li><a href="#move">원하는 곳으로 이동</a></li>
+      <li><a href="#version">번역본 바꾸기·비교</a></li>
+      <li><a href="#note">예배 중 노트 쓰기</a></li>
+      <li><a href="#noted">성경에서 노트 다시 만나기</a></li>
+      <li><a href="#find">찾기</a></li>
+      <li><a href="#xref">관주 — 관련 구절</a></li>
+      <li><a href="#settings">보기 설정</a></li>
+      <li><a href="#sync">폰·PC 노트 맞추기</a></li>
+      <li><a href="#offline">오프라인·백업</a></li>
+      <li><a href="#faq">자주 묻는 질문</a></li>
+    </ol>
+  </section>
+
+  <section id="install">
+    <h2>1. 폰에 설치하기</h2>
+    <p>주소 <a href="./">wavesimm.github.io/biblenote</a> 를 열고 홈 화면에 추가하면, 앱처럼 아이콘으로 열리고 전체 화면으로 보입니다.</p>
+    <ul>
+      <li><strong>안드로이드 (크롬)</strong> — 오른쪽 위 <kbd>⋮</kbd> → <kbd>홈 화면에 추가</kbd> 또는 <kbd>앱 설치</kbd></li>
+      <li><strong>아이폰 (사파리)</strong> — 아래 가운데 공유 단추 <kbd>□↑</kbd> → <kbd>홈 화면에 추가</kbd></li>
+      <li><strong>PC</strong> — 크롬·엣지 주소창 오른쪽의 설치 아이콘을 누르거나, 그냥 브라우저에서 써도 됩니다.</li>
+    </ul>
+    <p class="tip">새 버전이 나오면 앱을 한 번 닫았다 다시 열 때 바뀝니다. 설정 <kbd>Aa</kbd> 오른쪽 위에 버전이 보입니다.</p>
+  </section>
+
+  <section id="read">
+    <h2>2. 읽기 화면의 단추</h2>
+    <figure class="shot">
+      <img src="help/01-read.webp" alt="읽기 화면 — 위아래 단추에 번호 표시" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <p><strong>위쪽 막대 — 이동</strong></p>
+        <ol class="marks">
+          <li><b>1</b><span><strong>이전 위치</strong> — 방금 전에 보던 곳으로 돌아갑니다.</span></li>
+          <li><b>2</b><span><strong>이전 장</strong> (겹 삼각형) · 오른쪽 짝은 다음 장</span></li>
+          <li><b>3</b><span><strong>이전 절</strong> (삼각형) · 오른쪽 짝은 다음 절</span></li>
+          <li><b>4</b><span><strong>지금 위치</strong> — 누르면 이동 화면이 열립니다 (<a href="#move">3장</a>).</span></li>
+          <li><b>5</b><span><strong>다음 위치</strong> — 1로 돌아갔다가 다시 앞으로.</span></li>
+        </ol>
+        <p><strong>아래쪽 막대 — 보기와 노트</strong></p>
+        <ol class="marks">
+          <li><b>6</b><span><strong>번역본</strong> — 누르면 번역본을 고릅니다.</span></li>
+          <li><b>7</b><span><strong>⇆ 비교</strong> — 번역본 둘을 함께 봅니다.</span></li>
+          <li><b>8</b><span><strong>절↵</strong> — 절마다 줄을 바꿔 보여 줍니다. 다시 누르면 문단처럼 이어서.</span></li>
+          <li><b>9</b><span><strong>찾기</strong> — 성경 본문·노트 검색.</span></li>
+          <li><b>10</b><span><strong>노트</strong> — 지금 보는 절을 본문으로 새 노트를 엽니다.</span></li>
+          <li><b>11</b><span><strong>Aa 설정</strong> — 글자 크기, 글꼴, 노트 동기화 등.</span></li>
+        </ol>
+      </figcaption>
+    </figure>
+    <p class="tip">성경은 절마다 줄을 바꾸지 않고 <strong>문단처럼 이어서</strong> 보여 줍니다. 장·절은 찾아가는 좌표로만 쓰고, 읽을 때는 방해하지 않게 하려는 것입니다.
+      작은 파란 숫자가 절 번호, 왼쪽 여백의 숫자가 장 번호입니다.</p>
+    <ul>
+      <li>화면을 <strong>왼쪽으로 쓸면</strong> 노트 쪽으로 갑니다 — 쓰던 노트가 있으면 그 노트로, 없으면 노트 목록으로.</li>
+      <li>성경을 펴 둔 동안에는 화면이 저절로 꺼지지 않습니다.</li>
+      <li>뒤로가기를 누르면 "한 번 더 누르면 앱이 닫힙니다" 알림이 먼저 뜹니다.</li>
+    </ul>
+  </section>
+
+  <section id="move">
+    <h2>3. 원하는 곳으로 이동</h2>
+    <figure class="shot">
+      <img src="help/02-move.webp" alt="이동 화면 — 구절 입력칸과 책 목록" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <p>위쪽 막대의 <strong>지금 위치</strong>(예: 로마서 8:25)를 누르면 열립니다.</p>
+        <ol class="marks">
+          <li><b>1</b><span><strong>구절 입력</strong> — <code>요3:16</code>, <code>창세기 1:1</code>, <code>롬 8</code> 처럼 적으면 아래에 어디인지 보여 줍니다.</span></li>
+          <li><b>2</b><span><strong>이동</strong> — 그 절로 갑니다.</span></li>
+          <li><b>3</b><span><strong>노트</strong> — 그 구절을 본문으로 <strong>바로 새 노트</strong>를 엽니다. 예배 시작 때 설교 본문을 부르면 이 길이 가장 빠릅니다.</span></li>
+          <li><b>4</b><span><strong>책 선택</strong> — 책을 누르고 장을 누르면 이동합니다. 위에는 최근 이동한 곳과 최근 책이 나옵니다.</span></li>
+        </ol>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="version">
+    <h2>4. 번역본 바꾸기·비교</h2>
+    <figure class="shot">
+      <img src="help/03-version.webp" alt="번역본 고르기 창" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <p>아래 막대 왼쪽의 <strong>번역본 단추</strong>를 누르면 고를 수 있습니다.</p>
+        <ol class="marks">
+          <li><b>1</b><span>개역개정 · 개역한글 · 공동번역 · 표준새번역 · 현대어성경 · 우리말성경 · NIV · NASB · The Message</span></li>
+        </ol>
+        <p>읽던 절은 그대로 두고 번역본만 바뀝니다.</p>
+      </figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="help/04-compare.webp" alt="두 번역본 비교 화면" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <ol class="marks">
+          <li><b>1</b><span><strong>위 창</strong>의 번역본</span></li>
+          <li><b>2</b><span><strong>아래 창</strong>의 번역본 — 각각 따로 바꿀 수 있습니다.</span></li>
+          <li><b>3</b><span><strong>⇆</strong> — 비교를 켜고 끕니다.</span></li>
+        </ol>
+        <p>두 창은 같은 절을 따라 함께 움직입니다. 폰을 가로로 돌리면 좌우로 나란히 보입니다.</p>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="note">
+    <h2>5. 예배 중 노트 쓰기</h2>
+    <figure class="shot">
+      <img src="help/07-note.webp" alt="노트 쓰기 화면 — 구절에 색이 붙은 모습" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <ol class="marks">
+          <li><b>1</b><span><strong>←</strong> 닫기 — 쓴 내용은 따로 저장하지 않아도 저절로 저장됩니다.</span></li>
+          <li><b>2</b><span><strong>설교 본문</strong> — 노트 첫 구절이 여기 뜹니다. 누르면 성경의 그 자리로.</span></li>
+          <li><b>3</b><span><strong>삭제</strong></span></li>
+          <li><b>4</b><span><strong>제목·설교자</strong> — 없어도 됩니다. 설교자 칸의 ▼를 누르면 전에 쓴 이름이 자주 쓴 순으로 나옵니다.</span></li>
+          <li><b>5</b><span><strong>본문</strong> — 알아본 구절은 <strong>글자 색</strong>이 바뀝니다. 색이 붙은 구절을 누르면 성경으로 갑니다.</span></li>
+          <li><b>6</b><span><strong>노트 찾기</strong> — 쓰다가 지난 노트를 찾아볼 때.</span></li>
+          <li><b>7</b><span><strong>성경 ⇄</strong> — 성경 화면으로 잠깐 갔다가, 떠 있는 <kbd>노트 ⇄</kbd> 단추로 쓰던 자리에 돌아옵니다. 오른쪽으로 쓸어도 성경으로 갑니다.</span></li>
+        </ol>
+      </figcaption>
+    </figure>
+
+    <h3>구절 적는 법 — 본문만 정해 두면 나머지는 짧게</h3>
+    <p><strong>첫 줄에 설교 본문</strong>을 적습니다. 그 뒤로는 책 이름을 빼고 적어도 <strong>설교 본문을 기준으로</strong> 채워집니다.</p>
+    <pre class="ex"><span class="p">롬8:28-30</span> 예시 목사님        <span class="c">← 설교 본문 = 이 노트의 기준</span>
+<span class="r">30</span> ->영화가 구원의 완성          <span class="c">← 절만 적으면 → 로마서 8:30</span>
+<span class="r">13:1</span> 권세에 복종하라            <span class="c">← 장:절 → 로마서 13:1</span>
+<span class="r">약1:3</span> 인내에는 고난이 따른다      <span class="c">← 다른 책은 약어로 → 야고보서 1:3</span>
+<span class="r">9</span> ->성령이 계신 사람            <span class="c">← 다시 절만 → 로마서 8:9 (야고보서가 아니라 본문으로)</span></pre>
+    <ul>
+      <li><code>4절</code>, <code>3-4절</code>, <code>13-14 :</code> 처럼 적어도 알아봅니다.</li>
+      <li><code>1.</code> <code>2)</code> 처럼 <strong>번호 매긴 목록</strong>은 구절로 치지 않습니다.</li>
+      <li>본문을 놓쳤으면 비워 두고 쓰다가 나중에 첫 줄에 적으세요. 그때 앞서 적은 절 번호들에 한꺼번에 색이 붙습니다.</li>
+      <li>아래 칸에 <strong>태그</strong>를 쉼표로 적으면 나중에 찾기 쉽습니다.</li>
+    </ul>
+    <p class="tip">새 노트를 여는 길은 셋입니다 — 아래 막대의 <strong>노트</strong> 단추(지금 보는 절이 본문), 이동 화면의 <strong>노트</strong> 단추(입력한 구절이 본문), 성경 화면에서 <strong>왼쪽으로 쓸기</strong>(쓰던 노트로 이어서).</p>
+  </section>
+
+  <section id="noted">
+    <h2>6. 성경에서 노트 다시 만나기</h2>
+    <figure class="shot">
+      <img src="help/05-noted.webp" alt="노트가 걸린 절의 첫 단어 색이 바뀐 모습" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <p>노트에 적은 구절은 성경에서 <strong>첫 단어의 색</strong>이 바뀝니다.</p>
+        <ol class="marks">
+          <li><b>1</b><span>로마서 8:28 — 이 절이 적힌 노트가 있다는 표시입니다. 이 문장을 누르면 노트가 뜹니다.</span></li>
+        </ol>
+        <p>찾으러 가지 않아도, <strong>읽다 보면 예전 노트가 저절로 나타나는 것</strong>이 이 앱의 핵심입니다.</p>
+      </figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="help/06-verse-sheet.webp" alt="그 절에 걸린 노트들" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <ol class="marks">
+          <li><b>1</b><span>그 절이 적힌 <strong>노트들</strong>이 최근 것부터 나옵니다. 같은 구절로 몇 년에 걸쳐 들은 설교를 한눈에 비교할 수 있습니다.</span></li>
+        </ol>
+        <p><kbd>노트 열기</kbd>를 누르면 노트 전체가 열립니다. 아래로 내리면 이 절의 <a href="#xref">관주</a>도 있습니다.</p>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="find">
+    <h2>7. 찾기</h2>
+    <figure class="shot">
+      <img src="help/08-find.webp" alt="성경 본문 검색" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <p>아래 막대의 <strong>돋보기</strong>를 누릅니다.</p>
+        <ol class="marks">
+          <li><b>1</b><span><strong>성경 / 노트</strong> 중 무엇을 찾을지 고릅니다.</span></li>
+          <li><b>2</b><span><strong>찾을 말</strong> — 여러 낱말을 띄어 적으면 모두 들어간 것만.</span></li>
+          <li><b>3</b><span><strong>전체 / 구약 / 신약</strong> 범위. 성경 찾기는 지금 보는 번역본에서 찾습니다.</span></li>
+        </ol>
+        <p>결과를 누르면 그 절로 갑니다.</p>
+      </figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="help/09-find-note.webp" alt="노트 검색·목록" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <ol class="marks">
+          <li><b>1</b><span><strong>노트</strong> 탭 — 제목·본문·설교자·태그에서 찾습니다. 비워 두면 모든 노트가 날짜순으로 나옵니다.</span></li>
+        </ol>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="xref">
+    <h2>8. 관주 — 관련 구절</h2>
+    <figure class="shot">
+      <img src="help/10-xref.webp" alt="관주 목록" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <p>본문의 <strong>작은 절 번호</strong>를 누르면 그 절의 노트와 관련 구절이 열립니다.</p>
+        <ol class="marks">
+          <li><b>1</b><span>관련 구절이 <strong>연관이 깊은 순서</strong>로 나옵니다. 누르면 그 구절로 가고, 위쪽 막대의 <strong>이전 위치</strong>로 돌아옵니다.</span></li>
+        </ol>
+        <p class="tip">관주는 OpenBible.info 교차참조(CC-BY)입니다. 종이 관주성경과는 목록이 다릅니다.</p>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="settings">
+    <h2>9. 보기 설정</h2>
+    <figure class="shot">
+      <img src="help/11-settings.webp" alt="보기 설정" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <p>아래 막대의 <strong>Aa</strong>를 누릅니다.</p>
+        <ol class="marks">
+          <li><b>1</b><span><strong>글자 크기</strong> 5단계, 그 아래 <strong>줄간격</strong></span></li>
+          <li><b>2</b><span><strong>테마</strong> — 자동(폰 설정 따라) / 밝게 / 어둡게</span></li>
+          <li><b>3</b><span><strong>글꼴</strong> — 명조 / 고딕, 그리고 따로 켜는 <strong>굵게</strong></span></li>
+        </ol>
+        <p>그 아래에서 절 번호, 여백의 장 번호, <strong>단락 제목</strong>(개역개정 소제목)을 보이거나 숨길 수 있습니다.</p>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="sync">
+    <h2>10. 폰·PC 노트 맞추기 (구글 드라이브)</h2>
+    <figure class="shot">
+      <img src="help/12-settings-notes.webp" alt="설정의 설교노트·동기화·오프라인 저장" width="600" height="1200" loading="lazy">
+      <figcaption>
+        <p>노트는 기본적으로 <strong>쓰는 기기 안에만</strong> 저장됩니다. 폰과 PC에서 같은 노트를 보려면:</p>
+        <ol class="marks">
+          <li><b>3</b><span><strong>구글 드라이브 연결</strong>을 누르고 → 구글 계정을 고르고 → 드라이브 권한을 <strong>허용</strong>합니다.</span></li>
+        </ol>
+        <p>다른 기기에서도 <strong>같은 구글 계정</strong>으로 연결하면 노트가 합쳐집니다.</p>
+      </figcaption>
+    </figure>
+    <ul>
+      <li>드라이브에 <code>biblenote-notes.json</code> 파일 하나가 생깁니다. 앱은 <strong>이 파일에만</strong> 접근합니다.</li>
+      <li>연결 후 한 시간 동안은 노트를 쓰거나, 앱으로 돌아오거나, 앱을 내릴 때 <strong>저절로</strong> 맞춥니다.</li>
+      <li>한 시간이 지나면 단추가 <kbd>동기화</kbd>로 바뀝니다. <strong>한 번 누르면</strong> 구글 창이 잠깐 떴다 닫히고 이어서 맞춥니다.</li>
+      <li>같은 노트를 두 기기에서 고쳤다면 <strong>나중에 고친 쪽</strong>이 남습니다. 한 기기에서 지운 노트는 다른 기기에서도 지워집니다.</li>
+      <li><kbd>해제</kbd>를 눌러도 이 기기의 노트와 드라이브 파일은 그대로 남습니다.</li>
+    </ul>
+    <p class="tip">노트는 앱 운영자에게 가지 않고 <strong>본인 드라이브에만</strong> 저장됩니다. 자세한 것은 <a href="privacy.html">개인정보처리방침</a>.</p>
+  </section>
+
+  <section id="offline">
+    <h2>11. 오프라인·백업</h2>
+    <ul>
+      <li><strong>성경 미리 받기</strong> — 설정 아래 <strong>오프라인 저장</strong>에서 번역본별 <kbd>받기</kbd> 또는 <kbd>전체 받기</kbd>(위 그림 4). 받아 둔 성경은 인터넷 없이 읽고 찾을 수 있습니다. 새 버전이 나와도 다시 받지 않습니다.</li>
+      <li><strong>노트 내보내기</strong>(위 그림 1) — 모든 노트를 파일 하나로 저장합니다. 가끔 받아 두면 안전합니다.</li>
+      <li><strong>가져오기</strong>(위 그림 2) — 내보낸 파일을 다른 기기에서 들여옵니다. 같은 노트는 겹치지 않고 나중에 고친 내용으로 합쳐집니다.</li>
+    </ul>
+  </section>
+
+  <section id="faq">
+    <h2>12. 자주 묻는 질문</h2>
+    <details>
+      <summary>노트가 없어졌어요.</summary>
+      <p>노트는 브라우저 안에 저장되므로 <strong>브라우저의 사이트 데이터를 지우거나</strong>, 앱을 지우고 다시 설치하면 사라질 수 있습니다.
+        구글 드라이브를 연결해 두었다면 다시 연결하면 돌아옵니다. 연결하지 않았다면 내보내기 파일로 가져오기 하세요.</p>
+    </details>
+    <details>
+      <summary>"구글 드라이브 연결"을 누르면 액세스가 차단됐다고 나와요.</summary>
+      <p>앱 쪽 설정 문제일 수 있습니다. 화면을 캡처해 <a href="mailto:yunsim@gmail.com">문의</a>해 주세요.</p>
+    </details>
+    <details>
+      <summary>[동기화] 단추를 자꾸 눌러야 해요.</summary>
+      <p>구글 로그인은 서버 없는 앱에서 한 시간씩만 유지됩니다. 한 시간 안에는 저절로 맞추고, 그 뒤에는 한 번 눌러 이어 주세요.
+        노트 자체는 기기에 먼저 저장되므로, 누르지 않아도 노트를 잃지는 않습니다.</p>
+    </details>
+    <details>
+      <summary>구절을 적었는데 색이 안 붙어요.</summary>
+      <p>첫 줄에 설교 본문(예: <code>롬8:28</code>)이 있는지 보세요. 절 번호만 적은 줄은 본문을 기준으로 채워지므로 본문이 없으면 알아보지 못합니다.
+        또 <code>1.</code> 처럼 숫자 뒤에 마침표가 바로 붙으면 목록 번호로 봅니다. <code>1절</code> 또는 <code>1 -></code> 처럼 적어 주세요.</p>
+    </details>
+    <details>
+      <summary>업데이트가 안 된 것 같아요.</summary>
+      <p>앱을 완전히 닫았다가 다시 여세요. 설정 <kbd>Aa</kbd> 오른쪽 위의 버전 번호로 확인할 수 있습니다.</p>
+    </details>
+  </section>
+
+  <p class="go"><a class="btn" href="./">BibleNote 열기</a></p>
+
+  <footer>
+    <a href="about.html">앱 소개</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">서비스 약관</a> · 문의 <a href="mailto:yunsim@gmail.com">yunsim@gmail.com</a>
+  </footer>
+</main>
+</body>
+</html>
