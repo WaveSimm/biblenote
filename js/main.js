@@ -9,7 +9,7 @@ import { onSwipe } from "./swipe.js";
 import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.js";
 import { initNotesIO, paintUsage } from "./notesio.js";
 
-const APP_VERSION = "v5.12"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v5.13"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
                              // ★ v50 까지는 정수, 이후 v5.01, v5.02 … 방식 (사용자 결정, 2026-09-03)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
@@ -747,6 +747,7 @@ function applySettings() {
   document.documentElement.style.setProperty("--fs", FS[settings.fontSize]);
   document.documentElement.style.setProperty("--lh", LH[settings.lineHeight]);
   document.body.classList.toggle("serif", settings.face === "serif");
+  document.body.classList.toggle("bold", settings.bold);
   document.body.classList.toggle("novnum", !settings.vnum);
   document.body.classList.toggle("noheads", !settings.heads);
   document.body.classList.toggle("chmarks", settings.chmarks);
@@ -783,6 +784,7 @@ function syncSegs() {
   mark("segLine", "lh", settings.lineHeight);
   mark("segTheme", "theme", settings.theme);
   mark("segFace", "face", settings.face);
+  $("segFace").querySelector("[data-bold]").classList.toggle("on", settings.bold);   // 명조·고딕과 따로 켜고 끈다
   mark("segVnum", "vnum", settings.vnum ? 1 : 0);
   mark("segHeads", "heads", settings.heads ? 1 : 0);
   mark("segChmark", "chmark", settings.chmarks ? 1 : 0);
@@ -792,7 +794,10 @@ function wireSettings() {
   $("segFont").onclick = (e) => { if (e.target.dataset.fs) { settings.fontSize = +e.target.dataset.fs; done(); } };
   $("segLine").onclick = (e) => { if (e.target.dataset.lh) { settings.lineHeight = +e.target.dataset.lh; done(); } };
   $("segTheme").onclick = (e) => { if (e.target.dataset.theme) { settings.theme = e.target.dataset.theme; done(); } };
-  $("segFace").onclick = (e) => { if (e.target.dataset.face) { settings.face = e.target.dataset.face; done(); } };
+  $("segFace").onclick = (e) => {
+    if (e.target.dataset.face) { settings.face = e.target.dataset.face; done(); }
+    else if (e.target.dataset.bold) { settings.bold = !settings.bold; done(); }
+  };
   $("segVnum").onclick = (e) => { if (e.target.dataset.vnum) { settings.vnum = e.target.dataset.vnum === "1"; done(); } };
   $("segHeads").onclick = (e) => { if (e.target.dataset.heads) { settings.heads = e.target.dataset.heads === "1"; done(); } };
   $("segChmark").onclick = (e) => { if (e.target.dataset.chmark) { settings.chmarks = e.target.dataset.chmark === "1"; done(); } };

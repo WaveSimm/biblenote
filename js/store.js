@@ -11,6 +11,7 @@ export const DEFAULTS = {
   lineHeight: 2,                  // 0~3 (120 / 150 / 180 / 200 %)
   theme: "auto",                  // auto | light | dark
   face: "serif",                  // serif | sans
+  bold: false,                    // 본문 굵게 (명조·고딕 어느 쪽에도)
   vnum: true,                     // 절 번호 표시
   chmarks: true,                  // 여백 장 번호
   vbreak: false,                  // 절마다 줄바꿈 (기본: 이어쓰기)

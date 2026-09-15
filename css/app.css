@@ -139,6 +139,8 @@ body.compare .pane + .pane { border-top: 2px solid var(--line); }
   font-size: var(--fs, 19px); line-height: var(--lh, 1.8);
 }
 body.serif .content { font-family: "Noto Serif KR", Georgia, "Times New Roman", serif; }
+/* 굵게 — 두 글꼴 모두 600 을 이미 받아 두므로 새로 내려받는 글꼴이 없다 */
+body.bold .content { font-weight: 600; }
 
 /* 책 제목: 책 경계에만 표시되는 얇은 구분 */
 .bk {
@@ -277,6 +279,8 @@ span.v.flash { animation: flash 2s ease-out; border-radius: 4px; }
 .seg { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .seg button { border: none; background: none; color: var(--fg); padding: 7px 12px; font-size: 13px; cursor: pointer; border-right: 1px solid var(--line); }
 .seg button:last-child { border-right: none; }
+/* 따로 켜고 끄는 단추 (글꼴 줄의 굵게) — 앞의 택일 단추들과 굵은 선으로 가른다 */
+.seg button.toggle { border-left: 2px solid var(--line); }
 .seg button.on { background: var(--chip-on); color: var(--chip-on-fg); }
 #segFont button:nth-child(1) { font-size: 11px; } #segFont button:nth-child(2) { font-size: 13px; }
 #segFont button:nth-child(3) { font-size: 15px; } #segFont button:nth-child(4) { font-size: 17px; }
