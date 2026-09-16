@@ -10,7 +10,7 @@ import { initVerseNotes, openVerseNotes, refreshVerseNotes } from "./versenotes.
 import { initNotesIO, paintUsage } from "./notesio.js";
 import { initDriveSync, paintDrive } from "./drivesync.js";
 
-const APP_VERSION = "v5.15"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
+const APP_VERSION = "v5.16"; // ★ 배포할 때 sw.js 의 VER 과 함께 올린다 (설정 시트 오른쪽 위에 보인다)
                              // ★ v50 까지는 정수, 이후 v5.01, v5.02 … 방식 (사용자 결정, 2026-09-03)
 const $ = (id) => document.getElementById(id);
 let TOP_OFFSET = 72; // 상단바 아래 본문 기준선(px) — syncBarMetrics()가 실제 바 높이로 갱신
@@ -66,7 +66,8 @@ class Pane {
     sec.dataset.b = b;
     const h = document.createElement("h2");
     h.className = "bk";
-    h.textContent = versionMeta(this.version).lang === "en" ? meta.en : meta.ko;
+    const lang = versionMeta(this.version).lang;
+    h.textContent = lang === "en" ? meta.en : meta.ko;
     sec.append(h);
     data.chapters.forEach((verses, ci) => {
       const p = document.createElement("p");
@@ -75,9 +76,9 @@ class Pane {
       p.dataset.b = b;
       p.dataset.c = cn;
       verses.forEach((t, vi) => {
-        // 단락 제목(개역개정 소제목) — 항상 그려 두고 설정(noheads)으로 숨긴다.
+        // 단락 제목(한글: 개역개정, 영문: BSB 소제목) — 항상 그려 두고 설정(noheads)으로 숨긴다.
         // 조판 토글에 재렌더가 필요 없도록.
-        const hd = headingAt(b, cn, vi + 1);
+        const hd = headingAt(b, cn, vi + 1, lang);
         if (hd) {
           const h = document.createElement("span");
           h.className = "hd";

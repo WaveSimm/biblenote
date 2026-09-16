@@ -1,21 +1,26 @@
 // BibleRepository: 본문 데이터의 유일한 공급자
 export let BOOKS = null;      // books.json (66권 메타)
 export let VERSIONS = null;   // versions.json
-let HEADINGS = null;          // headings.json — "책:장:절" -> 단락 제목 (개역개정 소제목)
+let HEADINGS = null;          // { ko, en } — "책:장:절" -> 단락 제목 (ko: 개역개정 소제목, en: BSB 소제목)
 
 const cache = new Map();      // "code:book" -> Promise<{book, chapters}>
 
 export async function initData() {
-  [BOOKS, VERSIONS, HEADINGS] = await Promise.all([
+  // 소제목은 없어도 앱은 돌아야 한다 (옛 캐시, 파일 미배포)
+  const opt = (url) => fetch(url).then(r => (r.ok ? r.json() : null)).catch(() => null);
+  let ko, en;
+  [BOOKS, VERSIONS, ko, en] = await Promise.all([
     fetch("data/books.json").then(r => r.json()),
     fetch("data/versions.json").then(r => r.json()),
-    // 소제목은 없어도 앱은 돌아야 한다 (옛 캐시, 파일 미배포)
-    fetch("data/headings.json").then(r => (r.ok ? r.json() : null)).catch(() => null),
+    opt("data/headings.json"),
+    opt("data/headings-en.json"),
   ]);
+  HEADINGS = { ko, en };
 }
 
-/** 그 절 앞에 걸린 단락 제목 — 좌표 기반이라 어느 번역본에서든 같은 자리에 선다 */
-export const headingAt = (b, c, v) => (HEADINGS ? HEADINGS[`${b}:${c}:${v}`] : undefined);
+/** 그 절 앞에 걸린 단락 제목 — 좌표 기반이라 같은 언어의 번역본이면 같은 자리에 선다.
+ *  영문 원본에는 소제목이 없어 BSB 것을 쓴다. 영문 파일이 없으면 제목 없이 (한글을 섞지 않는다) */
+export const headingAt = (b, c, v, lang) => HEADINGS?.[lang === "en" ? "en" : "ko"]?.[`${b}:${c}:${v}`];
 
 export function getBook(code, b) {
   const key = code + ":" + b;
