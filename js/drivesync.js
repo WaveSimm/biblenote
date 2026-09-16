@@ -38,7 +38,19 @@ const saveState = () => write(S_KEY, state);
 
 function cachedToken() {
   const t = read(T_KEY);
-  return t && t.exp - 60_000 > Date.now() ? t.token : null;
+  if (!t) return null;
+  if (t.exp - 60_000 <= Date.now()) { dropToken("한 시간이 지나 다시 연결해야 합니다"); return null; }
+  return t.token;
+}
+
+// 토큰이 왜 없어졌는지 남긴다 — 상태 줄에 보여 주고, 다시 연결하면 지운다
+function dropToken(reason) {
+  try { localStorage.removeItem(T_KEY); } catch { /* 무시 */ }
+  write(S_KEY, (state = { ...state, lost: { reason, at: Date.now() } }));
+}
+function why() {
+  const l = state.lost;
+  return l ? `${l.reason} (${new Date(l.at).toTimeString().slice(0, 5)})` : "";
 }
 
 let gisLoading = null;
@@ -65,6 +77,8 @@ function askToken() {
         if (!google.accounts.oauth2.hasGrantedAllScopes(res, SCOPE))
           return no(new Error("드라이브 권한을 허락해야 동기화할 수 있습니다"));
         write(T_KEY, { token: res.access_token, exp: Date.now() + res.expires_in * 1000 });
+        delete state.lost;
+        saveState();
         ok(res.access_token);
       },
       error_callback: (err) => no(new Error(err.type === "popup_closed" ? "구글 창을 닫았습니다" : (err.message || err.type))),
@@ -79,13 +93,20 @@ class AuthError extends Error {}
 
 async function api(url, init = {}) {
   const token = cachedToken();
-  if (!token) throw new AuthError("연결이 만료됐습니다");
+  if (!token) throw new AuthError(why() || "연결이 만료됐습니다");
   const res = await fetch(url, { ...init, headers: { ...(init.headers || {}), Authorization: `Bearer ${token}` } });
-  if (res.status === 401 || (res.status === 403 && /auth|scope|permission/i.test(await res.clone().text()))) {
-    localStorage.removeItem(T_KEY);
-    throw new AuthError("연결이 만료됐습니다");
+  // 토큰을 버리는 것은 401(토큰이 죽었다) 뿐이다. 403 은 권한·한도·일시적 거절이 섞여 있어
+  // 여기서 버리면 멀쩡한 연결이 1분 만에 풀린다 (v5.14 에서 실제로 그랬다).
+  if (res.status === 401) {
+    dropToken(`구글이 토큰을 거절했습니다 (401)`);
+    throw new AuthError(why());
   }
-  if (!res.ok) throw new Error(`드라이브 응답 ${res.status}`);
+  if (!res.ok) {
+    const body = (await res.text().catch(() => "")).slice(0, 300);
+    console.error("드라이브 응답", res.status, url, body);
+    const m = body.match(/"message"\s*:\s*"([^"]+)"/);
+    throw new Error(`드라이브 응답 ${res.status}${m ? " — " + m[1] : ""}`);
+  }
   return res;
 }
 
@@ -272,7 +293,7 @@ function paint(busy = "") {
     stat.textContent = `${who}동기화 실패 — ${lastError}`;
   } else if (!cachedToken()) {
     btn.textContent = "동기화";
-    stat.textContent = `${who}${state.dirty ? "올릴 변경이 있습니다 — " : ""}누르면 동기화합니다`;
+    stat.textContent = who + (why() || "누르면 동기화합니다") + (state.dirty ? " · 올릴 변경 있음" : "");
   } else {
     btn.textContent = "지금 동기화";
     stat.textContent = `${who}${state.last ? ago(state.last) + " 동기화" : "연결됨"}${state.dirty ? " · 올릴 변경 있음" : ""}`;
