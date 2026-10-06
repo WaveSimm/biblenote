@@ -3,7 +3,7 @@
 //   VER  : 앱 셸(HTML/JS/CSS). 배포마다 새로 만들고 옛것은 지운다.
 //   DATA : 성경 본문·폰트. 내용이 변하지 않으므로 배포와 무관하게 계속 남긴다.
 //          (한 번 받은 책은 다시 내려받지 않는다)
-const VER = "biblenote-v5.16";
+const VER = "biblenote-v5.17";
 const DATA = "biblenote-data-v1";
 const SHELL = [
   "./", "index.html", "css/app.css",
@@ -57,6 +57,14 @@ self.addEventListener("activate", (e) => {
         for (const req of await data.keys())
           if (new URL(req.url).pathname.includes("/data/xref/")) await data.delete(req);
         await data.put(MARK, new Response("1"));
+      }
+      // v5.17: 개역개정·공동번역·현대어성경 본문이 침례교 판(세례→침례)이었던 것을 바로잡았다.
+      // 받아 둔 세 번역본을 한 번만 걷어낸다 (같은 표식 방식)
+      const MARK2 = "data/.sere-v1";
+      if (!(await data.match(MARK2))) {
+        for (const req of await data.keys())
+          if (/\/data\/(krv|ckb|klb)\//.test(new URL(req.url).pathname)) await data.delete(req);
+        await data.put(MARK2, new Response("1"));
       }
     } catch { /* 못 지워도 진행 */ }
     const keys = await caches.keys();
